@@ -1,55 +1,63 @@
-DAEMONTOOLS = daemontools-0.76
-DJBDNS = djbdns-1.05
-EZMLM = ezmlm-0.53
-EZMLMIDX = ezmlm-idx-5.1.2
-QMAIL = netqmail-1.06
-QGREY = qgrey-0.1-0.3
-QGREYLIST = qgreylist-0.3
-QMAILCONF = qmail-conf-0.60
-QTOOLS = qtools-0.56
-UCSPITCP = ucspi-tcp-0.88
+daemontools = daemontools-0.76
+djbdns = djbdns-1.05
+ezmlm = ezmlm-0.53
+ezmlmidx = ezmlm-idx-5.1.2
+mess822 = mess822-0.58
+qmail = netqmail-1.06
+qgrey = qgrey-0.1-0.3
+qgreylist = qgreylist-0.3
+qmailconf = qmail-conf-0.60
+qtools = qtools-0.56
+ucspitcp = ucspi-tcp-0.88
 
-WRKDIR = work
-SRCDIR = src
+wrkdir = work
+srcdir = src
 
-MKDIR = mkdir -p
-CPR = cp -rp
-RMRF = rm -rf
+mkdir = mkdir -p
+cpr = cp -rp
+rmrf = rm -rf
 
-QMAILDIR = /var/qmail
-PSEUDO_SHELL = /bin/true
-ADMINPKGDIR = /package/admin
+qmaildir = /var/qmail
+pseudo_shell = /bin/true
+adminpkgdir = /package/admin
+dnscachedir = /var/dnscache
+tinydnsdir = /var/tinydns
+axfrdnsdir = /var/axfrdns
+walldnsdir = /var/walldns
 
-BUILD_DONE = .build_done
+build_done = .build_done
 
-${WRKDIR}:
-	${MKDIR} ${WRKDIR}
+${wrkdir}:
+	${mkdir} ${wrkdir}
+
+clean:
+	${rmrf} ${wrkdir}
 
 ## daemontools
 install-daemontools:
-	${MKDIR} ${ADMINPKGDIR}
-	${CPR} ${SRCDIR}/${DAEMONTOOLS} ${ADMINPKGDIR}
-	(cd ${ADMINPKGDIR}/${DAEMONTOOLS}; package/install)
+	${mkdir} ${adminpkgdir}
+	${cpr} ${srcdir}/${daemontools} ${adminpkgdir}
+	(cd ${adminpkgdir}/${daemontools}; package/install)
 
 ## djbdns
 configure-djbdns:
-	useradd -g dnscache -d ${DNSCACHEDIR} -s ${PSEUDO_SHELL} dnscache
-	useradd -g dnslog -d ${DNSCACHEDIR} -s ${PSEUDO_SHELL} dnslog
-	useradd -g tinydns -d ${TINYDNSDIR} -s ${PSEUDO_SHELL} tinydns
-	useradd -g axfrdns -d ${AXFRDNSDIR} -s ${PSEUDO_SHELL} axfrdns
-	useradd -g walldns -d ${WALLDNSDIR} -s ${PSEUDO_SHELL} walldns
+	useradd -g dnscache -d ${dnscachedir} -s ${pseudo_shell} dnscache
+	useradd -g dnslog -d ${dnscachedir} -s ${pseudo_shell} dnslog
+	useradd -g tinydns -d ${tinydnsdir} -s ${pseudo_shell} tinydns
+	useradd -g axfrdns -d ${axfrdnsdir} -s ${pseudo_shell} axfrdns
+	useradd -g walldns -d ${walldnsdir} -s ${pseudo_shell} walldns
 
-build-djbdns: ${WRKDIR}
+build-djbdns: ${wrkdir}
 	@${MAKE} clean-djbdns
-	${CPR} ${SRCDIR}/${DJBDNS} ${WRKDIR}
-	(cd ${WRKDIR}/${DJBDNS}; ${MAKE})
+	${cpr} ${srcdir}/${djbdns} ${wrkdir}
+	(cd ${wrkdir}/${djbdns}; ${MAKE})
 
-${WRKDIR}/${DJBDNS}/${BUILD_DONE}: build-djbdns
+${wrkdir}/${djbdns}/${build_done}: build-djbdns
 	touch $@
 
-install-djbdns: ${WRKDIR}/${DJBDNS}/${BUILD_DONE}
+install-djbdns: ${wrkdir}/${djbdns}/${build_done}
 	@${MAKE} pre-install-djbdns
-	(cd ${WRKDIR}/${DJBDNS}; ${MAKE} setup check)
+	(cd ${wrkdir}/${djbdns}; ${MAKE} setup check)
 	@${MAKE} post-install-djbdns
 
 pre-install-djbdns:
@@ -63,103 +71,142 @@ post-install-djbdns:
 	[ -L /service/tinydns ] && svc -u /service/tinydns /service/tinydns/log
 
 clean-djbdns:
-	${RMRF} ${WRKDIR}/${DJBDNS}
+	${rmrf} ${wrkdir}/${djbdns}
 
 ## qmail
 # this is for Linux
 configure-qmail:
-	${MKDIR} ${QMAILDIR}
+	${mkdir} ${qmaildir}
 	groupadd nofiles
-	useradd -g nofiles -d ${QMAILDIR}/alias -s ${PSEUDO_SHELL} alias
-	useradd -g nofiles -d ${QMAILDIR} -s ${PSEUDO_SHELL} qmaild
-	useradd -g nofiles -d ${QMAILDIR} -s ${PSEUDO_SHELL} qmaill
-	useradd -g nofiles -d ${QMAILDIR} -s ${PSEUDO_SHELL} qmailp
+	useradd -g nofiles -d ${qmaildir}/alias -s ${pseudo_shell} alias
+	useradd -g nofiles -d ${qmaildir} -s ${pseudo_shell} qmaild
+	useradd -g nofiles -d ${qmaildir} -s ${pseudo_shell} qmaill
+	useradd -g nofiles -d ${qmaildir} -s ${pseudo_shell} qmailp
 	groupadd qmail
-	useradd -g qmail -d ${QMAILDIR} -s ${PSEUDO_SHELL} qmailq
-	useradd -g qmail -d ${QMAILDIR} -s ${PSEUDO_SHELL} qmailr
-	useradd -g qmail -d ${QMAILDIR} -s ${PSEUDO_SHELL} qmails
+	useradd -g qmail -d ${qmaildir} -s ${pseudo_shell} qmailq
+	useradd -g qmail -d ${qmaildir} -s ${pseudo_shell} qmailr
+	useradd -g qmail -d ${qmaildir} -s ${pseudo_shell} qmails
 
-build-qmail: ${WRKDIR}
+build-qmail: ${wrkdir}
 	@${MAKE} clean-qmail
-	${CPR} ${SRCDIR}/${QMAIL} ${WRKDIR}
-	(cd ${WRKDIR}/${QMAIL}; ${MAKE})
+	${cpr} ${srcdir}/${qmail} ${wrkdir}
+	(cd ${wrkdir}/${qmail}; ${MAKE})
 
-install-qmail: build-qmail
-	(cd ${WRKDIR}/${QMAIL}; ${MAKE} setup check)
+${wrkdir}/${qmail}/${build_done}: build-qmail
+	touch $@
+
+install-qmail: ${wrkdir}/${qmail}/${build_done}
+	@${MAKE} pre-install-qmail
+	(cd ${wrkdir}/${qmail}; ${MAKE} setup check)
+	@${MAKE} post-install-qmail
+
+pre-install-qmail:
+	[ -L /service/qmail ] && svc -d /service/qmail /service/qmail/log
+	[ -L /service/smtpd ] && svc -d /service/smtpd /service/smtpd/log
+
+post-install-qmail:
+	[ -L /service/qmail ] && svc -u /service/qmail /service/qmail/log
+	[ -L /service/smtpd ] && svc -u /service/smtpd /service/smtpd/log
 
 clean-qmail:
-	${RMRF} ${WRKDIR}/${QMAIL}
+	${rmrf} ${wrkdir}/${qmail}
 
 ## ucspi-tcp
-build-ucspi-tcp: ${WRKDIR}
+build-ucspi-tcp: ${wrkdir}
 	@${MAKE} clean-ucspi-tcp
-	${CPR} ${SRCDIR}/${UCSPITCP} ${WRKDIR}
-	(cd ${WRKDIR}/${UCSPITCP}; ${MAKE})
+	${cpr} ${srcdir}/${ucspitcp} ${wrkdir}
+	(cd ${wrkdir}/${ucspitcp}; ${MAKE})
 
-install-ucspi-tcp:
-	(cd ${WRKDIR}/${UCSPITCP}; ${MAKE} setup check)
+${wrkdir}/${ucspitcp}/${build_done}: build-ucspi-tcp
+	touch $@
+
+install-ucspi-tcp: ${wrkdir}/${ucspitcp}/${build_done}
+	(cd ${wrkdir}/${ucspitcp}; ${MAKE} setup check)
 
 clean-ucspi-tcp:
-	${RMRF} ${WRKDIR}/${UCSPITCP}
+	${rmrf} ${wrkdir}/${ucspitcp}
 
 ## qmail-conf
-build-qmail-conf: ${WRKDIR}
+build-qmail-conf: ${wrkdir}
 	@${MAKE} clean-qmail-conf
-	${CPR} ${SRCDIR}/${QMAILCONF} ${WRKDIR}
-	${CPR} ${SRCDIR}/${DJBDNS} ${WRKDIR}
-	(cd ${WRKDIR}/${QMAILCONF}; \
-	  ${MAKE} -f Makefile.ini djbdns=../${DJBDNS})
-	(cd ${WRKDIR}/${QMAILCONF}; ${MAKE})
+	${cpr} ${srcdir}/${qmailconf} ${wrkdir}
+	${cpr} ${srcdir}/${djbdns} ${wrkdir}
+	(cd ${wrkdir}/${qmailconf}; \
+	  ${MAKE} -f Makefile.ini djbdns=../${djbdns})
+	(cd ${wrkdir}/${qmailconf}; ${MAKE})
 
-install-qmail-conf:
-	(cd ${WRKDIR}/${QMAILCONF}; ${MAKE} setup check)
+${wrkdir}/${qmailconf}/${build_done}: build-qmail-conf
+	touch ${wrkdir}/${qmailconf}/${build_done}
+
+install-qmail-conf: ${wrkdir}/${qmailconf}/${build_done}
+	(cd ${wrkdir}/${qmailconf}; ${MAKE} setup check)
 
 clean-qmail-conf:
-	${RMRF} ${WRKDIR}/${QMAILCONF} ${WRKDIR}/${DJBDNS}
+	${rmrf} ${wrkdir}/${qmailconf} ${wrkdir}/${djbdns}
 
 ## ezmlm-idx
-build-ezmlm-idx: ${WRKDIR}
+build-ezmlm-idx: ${wrkdir}
 	@${MAKE} clean-ezmlm-idx
-	${CPR} ${SRCDIR}/${EZMLM} ${WRKDIR}
-	${CPR} ${SRCDIR}/${EZMLMIDX}/* ${WRKDIR}/${EZMLM}
-	(cd ${WRKDIR}/${EZMLM}; patch < idx.patch)
-	(cd ${WRKDIR}/${EZMLM}; ${MAKE}; ${MAKE} man)
+	${cpr} ${srcdir}/${ezmlm} ${wrkdir}
+	${cpr} ${srcdir}/${ezmlmidx}/* ${wrkdir}/${ezmlm}
+	(cd ${wrkdir}/${ezmlm}; patch < idx.patch)
+	(cd ${wrkdir}/${ezmlm}; ${MAKE}; ${MAKE} man)
 
-install-ezmlm-idx:
-	(cd ${WRKDIR}/${EZMLM}; ${MAKE} setup)
+${wrkdir}/${ezmlm}/${build_done}: build-ezmlm-idx
+	touch $@
+
+install-ezmlm-idx: ${wrkdir}/${ezmlm}/${build_done}
+	(cd ${wrkdir}/${ezmlm}; ${MAKE} setup)
 
 clean-ezmlm-idx:
-	${RMRF} ${WRKDIR}/${EZMLM}
+	${rmrf} ${wrkdir}/${ezmlm}
 
 ## qgrey
-build-qgrey: ${WRKDIR}
+build-qgrey: ${wrkdir}
 	@${MAKE} clean-qgrey
-	${CPR} ${SRCDIR}/${QGREYLIST} ${WRKDIR}
-	${CPR} ${SRCDIR}/${QGREY}/* ${WRKDIR}/${QGREYLIST}
-	(cd ${WRKDIR}/${QGREYLIST}; patch < qgrey.patch)
+	${cpr} ${srcdir}/${qgreylist} ${wrkdir}
+	${cpr} ${srcdir}/${qgrey}/* ${wrkdir}/${qgreylist}
+	(cd ${wrkdir}/${qgreylist}; patch < qgrey.patch)
 
-install-qgrey:
-	${MKDIR} ${QMAILDIR}/greylist ${QMAILDIR}/whitelist
-	chown qmaild ${QMAILDIR}/greylist
-	(cd ${WRKDIR}/${QGREYLIST}; \
-	  cp greylist ${QMAILDIR}/bin; \
-	  cp s25r ${QMAILDIR})
+${wrkdir}/${qgrey}/${build_done}: build-qgrey
+	touch $@
+
+install-qgrey: ${wrkdir}/${qgrey}/${build_done}
+	${mkdir} ${qmaildir}/greylist ${qmaildir}/whitelist
+	chown qmaild ${qmaildir}/greylist
+	(cd ${wrkdir}/${qgreylist}; \
+	  cp greylist ${qmaildir}/bin; \
+	  cp s25r ${qmaildir})
 
 clean-qgrey:
-	${RMRF} ${WRKDIR}/${QGREYLIST}
+	${rmrf} ${wrkdir}/${qgreylist}
 
 ## qtools
-build-qtools: ${WRKDIR}
+build-qtools: ${wrkdir}
 	@${MAKE} clean-qtools
-	${CPR} ${SRCDIR}/${QTOOLS} ${WRKDIR}
-	(cd ${WRKDIR}/${QTOOLS}; ${MAKE} prog)
+	${cpr} ${srcdir}/${qtools} ${wrkdir}
+	(cd ${wrkdir}/${qtools}; ${MAKE} prog)
 
-install-qtools:
-	(cd ${WRKDIR}/${QTOOLS}; ${MAKE} setup check)
+${wrkdir}/${qtools}/${build_done}: build-qtools
+	touch $@
+
+install-qtools: ${wrkdir}/${qtools}/${build_done}
+	(cd ${wrkdir}/${qtools}; ${MAKE} setup check)
 
 clean-qtools:
-	${RMRF} ${WRKDIR}/${QTOOLS}
+	${rmrf} ${wrkdir}/${qtools}
 
-clean:
-	${RMRF} ${WRKDIR}
+## mess822
+build-mess822: ${wrkdir}
+	@${MAKE} clean-mess822
+	${cpr} ${srcdir}/${mess822} ${wrkdir}
+	(cd ${wrkdir}/${mess822}; ${MAKE})
 
+${wrkdir}/${mess822}/${build_done}: build-mess822
+	touch $@
+
+install-mess822: ${wrkdir}/${mess822}/${build_done}
+	(cd ${wrkdir}/${mess822}; ${MAKE} setup check)
+
+clean-mess822:
+	${rmrf} ${wrkdir}/${mess822}
