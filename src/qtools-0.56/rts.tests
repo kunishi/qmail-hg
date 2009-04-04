@@ -1,0 +1,288 @@
+# Assumptions:
+# addcr
+
+# not tested:
+
+# read/write errors
+# filterto
+
+
+umask 022
+
+mkdir 0
+
+RECIPIENT=another@example.com; export RECIPIENT
+RPLINE='Return-Path: <someone@example.com>
+'; export RPLINE
+DTLINE='Delivered-To: another@example.com
+'; export DTLINE
+
+cat <<EOF >0/msg.ok
+From: someone@example.com
+CC: somebody@example.com
+To: another@example.com
+Subject: strangeness@example.com
+
+body1
+body2
+body3
+EOF
+
+addcr <0/msg.ok >0/msg.cr
+sed -e '/^$/d' <0/msg.ok >0/msg.bad
+
+{
+  printf "%s" "\
+From: someone@example.com
+CC: somebody@example.com
+To: another@example.com
+Subject: strangeness@example.com"
+} > 0/msg.eof
+
+mkdir 0/Maildir
+mkdir 0/Maildir/new
+mkdir 0/Maildir/tmp
+
+
+# 822body
+
+echo '--- 822body handles well-formed message'
+./822body <./0/msg.ok; echo $?
+
+echo '--- 822body handles well-formed message'
+./822body <./0/msg.cr; echo $?
+
+echo '--- 822body handles ill-formed message'
+./822body <./0/msg.bad; echo $?
+
+echo '--- 822body handles header to EOF'
+./822body <./0/msg.eof; echo $?
+
+
+# 822headerok
+
+echo '--- 822headerok handles well-formed message'
+./822headerok <./0/msg.ok; echo $?
+
+echo '--- 822headerok handles well-formed message'
+./822headerok <./0/msg.cr; echo $?
+
+echo '--- 822headerok handles ill-formed message'
+./822headerok <./0/msg.bad; echo $?
+
+echo '--- 822headerok handles header to EOF'
+./822headerok <./0/msg.eof; echo $?
+
+
+# 822bodyfilter
+
+echo '--- 822bodyfilter handles well-formed message'
+./822bodyfilter cat -nv <./0/msg.ok; echo $?
+
+echo '--- 822bodyfilter handles well-formed message'
+./822bodyfilter cat -nv <./0/msg.cr; echo $?
+
+echo '--- 822bodyfilter handles ill-formed message'
+./822bodyfilter cat -nv <./0/msg.bad; echo $?
+
+echo '--- 822bodyfilter handles header to EOF'
+./822bodyfilter cat -nv <./0/msg.eof; echo $?
+
+
+# 822headerfilter
+
+echo '--- 822headerfilter handles well-formed message'
+./822headerfilter cat -nv <./0/msg.ok; echo $?
+
+echo '--- 822headerfilter handles well-formed message'
+./822headerfilter cat -nv <./0/msg.cr; echo $?
+
+echo '--- 822headerfilter handles ill-formed message'
+./822headerfilter cat -nv <./0/msg.bad; echo $?
+
+echo '--- 822headerfilter handles header to EOF'
+./822headerfilter cat -nv <./0/msg.eof; echo $?
+
+
+# tomaildir
+echo '--- tomaildir requires argument'
+rm -fr 0/Maildir/new/*
+./tomaildir <./0/msg.ok; echo $?
+test -f 0/Maildir/new/* && echo wrong
+
+echo '--- tomaildir adds proper headers'
+rm -fr 0/Maildir/new/*
+./tomaildir 0/Maildir <./0/msg.ok; echo $?
+cat 0/Maildir/new/*
+
+
+# condtomaildir
+echo '--- condtomaildir requires argument'
+rm -fr 0/Maildir/new/*
+./condtomaildir 0/Maildir <./0/msg.ok; echo $?
+test -f 0/Maildir/new/* && echo wrong
+
+echo '--- condtomaildir handles nonexistent program'
+rm -fr 0/Maildir/new/*
+./condtomaildir 0/Maildir ./nonexistent <./0/msg.ok; echo $?
+test -f 0/Maildir/new/* && echo wrong
+
+echo '--- condtomaildir handles program permanent error'
+rm -fr 0/Maildir/new/*
+./condtomaildir 0/Maildir false <./0/msg.ok; echo $?
+test -f 0/Maildir/new/* && echo wrong
+
+echo '--- condtomaildir preserves exit 111'
+rm -fr 0/Maildir/new/*
+./condtomaildir 0/Maildir /bin/sh -c 'exit 111' <./0/msg.ok; echo $?
+test -f 0/Maildir/new/* && echo wrong
+
+echo '--- condtomaildir handles program success'
+rm -fr 0/Maildir/new/*
+./condtomaildir 0/Maildir true <./0/msg.ok; echo $?
+cat 0/Maildir/new/*
+
+# iftoccfrom
+
+echo '--- iftoccfrom uses RECIPIENT'
+./iftoccfrom <./0/msg.ok; echo $?
+
+echo '--- iftoccfrom handles To'
+./iftoccfrom another@example.com <./0/msg.ok; echo $?
+
+echo '--- iftoccfrom handles Cc'
+./iftoccfrom somebody@example.com <./0/msg.ok; echo $?
+
+echo '--- iftoccfrom handles From'
+./iftoccfrom someone@example.com <./0/msg.ok; echo $?
+
+echo '--- iftoccfrom handles well-formed message'
+./iftoccfrom somebody@example.com <./0/msg.ok; echo $?
+
+echo '--- iftoccfrom fails with CRLF'
+./iftoccfrom somebody@example.com <./0/msg.cr; echo $?
+
+echo '--- iftoccfrom handles ill-formed message'
+./iftoccfrom someone@example.com <./0/msg.bad; echo $?
+
+echo '--- iftoccfrom handles header to EOF'
+./iftoccfrom someone@example.com <./0/msg.eof; echo $?
+
+echo '--- iftoccfrom handles multiple addresses'
+./iftoccfrom nonsense@example.com someone@example.com <./0/msg.eof; echo $?
+
+
+# 822headers
+
+echo '--- 822headers works'
+./822headers to subject nonexistent <./0/msg.ok; echo $?
+
+echo '--- 822headers works with no matches'
+./822headers nonexistent <./0/msg.ok; echo $?
+
+echo '--- 822headers uses subject'
+./822headers <./0/msg.ok; echo $?
+
+echo '--- 822headers handles ill-formed message'
+./822headers to subject nonexistent <./0/msg.bad; echo $?
+
+echo '--- 822headers handles header to EOF'
+./822headers to subject nonexistent <./0/msg.eof; echo $?
+
+
+# 822fields
+
+echo '--- 822fields works'
+./822fields to subject nonexistent <./0/msg.ok; echo $?
+
+echo '--- 822fields works with no matches'
+./822fields nonexistent <./0/msg.ok; echo $?
+
+echo '--- 822fields uses subject'
+./822fields <./0/msg.ok; echo $?
+
+echo '--- 822fields handles ill-formed message'
+./822fields to subject nonexistent <./0/msg.bad; echo $?
+
+echo '--- 822fields handles header to EOF'
+./822fields to subject nonexistent <./0/msg.eof; echo $?
+
+
+# 822addr
+
+echo '--- 822addr works'
+./822addr to from nonexistent <./0/msg.ok; echo $?
+
+echo '--- 822addr works with no matches'
+./822addr nonexistent <./0/msg.ok; echo $?
+
+echo '--- 822addr uses RECIPIENT'
+./822addr <./0/msg.ok; echo $?
+
+echo '--- 822addr handles ill-formed message'
+./822addr to subject nonexistent <./0/msg.bad; echo $?
+
+echo '--- 822addr handles header to EOF'
+./822addr to subject nonexistent <./0/msg.eof; echo $?
+
+cat <<EOF >0/msg.addr
+From: someone@example.com (someone)
+CC: somebody@example.com (somebody)
+To: another@example.com (another)
+Subject: strangeness@example.com
+
+body1
+body2
+body3
+EOF
+
+echo '--- 822addr handles comments'
+./822addr to cc from nonexistent <./0/msg.addr; echo $?
+
+
+# checkaddr
+
+echo '--- checkaddr works'
+./822addr to cc from <./0/msg.addr \
+  | ./checkaddr nonesuch@example.com someone@example.com; echo $?
+
+echo '--- checkaddr uses RECIPIENT'
+./822addr to <./0/msg.addr | ./checkaddr; echo $?
+
+echo '--- checkaddr works with no match'
+./822addr nonesuch <./0/msg.addr | ./checkaddr; echo $?
+
+
+# checkdomain
+
+echo '--- checkdomain works'
+./822addr to cc from <./0/msg.addr \
+  | ./checkdomain test.com example.com; echo $?
+
+echo '--- checkdomain uses RECIPIENT'
+./822addr to <./0/msg.addr | ./checkdomain; echo $?
+
+echo '--- checkdomain works with no match'
+./822addr to cc from <./0/msg.addr | ./checkdomain ""; echo $?
+
+
+# ifaddr
+
+echo '--- ifaddr uses RECIPIENT'
+./ifaddr < ./0/msg.addr; echo $?
+./ifaddr to subject : < ./0/msg.addr; echo $?
+
+echo '--- ifaddr works without fields'
+./ifaddr another@example.com < ./0/msg.addr; echo $?
+./ifaddr : somebody@example.com < ./0/msg.addr; echo $?
+
+echo '--- ifaddr works with fields'
+./ifaddr to subject : strangeness@example.com < ./0/msg.addr; echo $?
+./ifaddr to subject : nonsense@example.com < ./0/msg.addr; echo $?
+
+echo '--- ifaddr works with domain'
+./ifaddr @example.com < ./0/msg.addr; echo $?
+./ifaddr subject : @example.com < ./0/msg.addr; echo $?
+./ifaddr @nonsense.com < ./0/msg.addr; echo $?
+
+rm -fr 0

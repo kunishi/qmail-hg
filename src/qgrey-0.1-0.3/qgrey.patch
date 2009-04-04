@@ -1,0 +1,66 @@
+--- greylist	2005-08-26 16:26:45.000000000 +0900
++++ qgrey	2005-08-26 16:26:45.000000000 +0900
+@@ -66,7 +66,9 @@
+ # location for whitelist files (eg. yahoo groups - they don't retry!)
+ my $whitelist = "/var/qmail/whitelist";
+ 
+-
++# location for S25R pattern file
++my $s25r_pattern_file = "/var/qmail/s25r";
++my @s25r_pattern = ();
+ 
+ # how long, after 1st seening an ip address, is it kept on the greylist
+ # (a minute or two is good enough - a few spammers retry within 30 seconds
+@@ -327,6 +329,31 @@
+ }
+ 
+ 
++#
++sub load_s25r_pattern
++{
++	if (open(CLIENTS, $s25r_pattern_file)) {
++	        while(<CLIENTS>) {
++			s/^\s+//; s/\s+$//; next if $_ eq '' or /^#/;
++			if(/^\/(\S+)\/$/) {
++				# regular expression
++				push @s25r_pattern, qr{$1}i;
++			}
++			# note: we had ^[^\s\/]+$ but it triggers a bug in perl 5.8.0
++			elsif(/^\S+$/) {
++				push @s25r_pattern, qr{\Q$_\E$}i;
++			}
++			else {
++				syslog "debug", "$s25r_pattern_file line $.: doesn't look like a hostname\n";
++			}
++		}
++		close(CLIENTS);
++	}
++	else {
++		syslog "debug", "Can't open S25R pattern file.";
++	}
++}
++
+ 
+ # ------------------------------------------------------------
+ # main code starts here......
+@@ -351,6 +378,20 @@
+ 
+ my $remoteip = $1;
+ 
++# S25R check
++if ( defined $ENV{TCPREMOTEHOST} )
++{
++	load_s25r_pattern;
++	my $client_fqdn = $ENV{TCPREMOTEHOST};
++
++	GREYLISTS: {
++		for my $w (@s25r_pattern) {
++			last GREYLISTS if $client_fqdn =~ $w;
++		}
++		syslog "debug", "No match S25R pattern" if $debugmsg;
++		run_next_stage;
++	}
++}
+ 
+ # IPs we relay for don't get greylisted...
+ if ( defined $ENV{RELAYCLIENT} )

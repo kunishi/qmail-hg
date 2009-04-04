@@ -1,0 +1,145 @@
+qgreylist - simple greylisting for qmail
+========================================
+
+http://www.jonatkins.com/qgreylist/
+
+
+What is greylisting?
+--------------------
+
+Greylisting is a spam control method. It works by returning a temporary SMTP
+error to the first delivery attempt. Most spam is sent from bulk
+mailers which don't retry, so these are blocked. Real mail servers will retry
+later after a temporary error, allowing the message through.
+
+See http://projects.puremagic.com/greylisting/ for more details.
+
+
+What is qgreylist?
+------------------
+
+qgreylist is a 'lite' version of greylisting. The puremagic.com page suggests
+using the source IP, the envelope from address and the envelope to address.
+This, in my opinion, is too extreme.
+
+qgreylist, on the other hand, just greylists by source IP address. This is
+mainly because it's written as a wrapper for qmail-smtp so has no other
+information available. For home and small office use this works nearly as well.
+
+
+Requirements
+------------
+
+qgreylist is written in perl. It has been tested with perl 5.8.0, but should
+work with much older versions as long as Sys::Syslog is available.
+
+
+Download qgreylist
+------------------
+
+The latest version can be downloaded here:
+
+http://www.jonatkins.com/qgreylist/qgreylist-0.3.tar.gz
+
+
+Installing qgreylist
+--------------------
+
+Unpack the tar file
+
+  # gzip -d -c qgreylist-$version.tar.gz | tar xvf -
+
+Configure qgreylist
+
+Edit qgreylist/greylist and check the settings. You may wish to change
+the location of the greylist files ($base) and perhaps some of the timeouts.
+
+Create the greylist IP folder
+(This is the value of $base - default: /var/qmail/greylist)
+
+  # mkdir /var/qmail/greylist
+
+and set the owner/permissions so that the owner of qmail-smtpd can create
+files (This is probably qmaild).
+
+  # chown qmaild /var/qmail/greylist
+
+Copy greylist somewhere sensible.
+I suggest using /var/qmail/bin/ but it's up to you.
+
+  # cp qgreylist/greylist /var/qmail/bin/
+
+
+qgreylist is now ready. You now need to change things so that qgreylist is
+called between tcp-env and qmail-smtpd
+
+If you are using inetd, change your inetd.conf from (on one line):
+
+        smtp stream tcp nowait qmaild /var/qmail/bin/tcp-env
+        tcp-env /var/qmail/bin/qmail-smtpd
+
+to
+
+        smtp stream tcp nowait qmaild /var/qmail/bin/tcp-env
+        tcp-env /var/qmail/bin/greylist /var/qmail/bin/qmail-smtpd
+
+then kill -HUP inetd-pid
+
+The change for tcpserver or xinetd is similar - just
+add /var/qmail/bin/greylist directly before /var/qmail/bin/qmail-smtpd
+and restart.
+
+Note: if using tcpserver, there may be a softlimit setting which is too low
+for perl to launch - try a larger value.
+
+
+That's it - greylisting should now be working.
+
+
+Testing
+-------
+
+Send some emails from an external host which *isn't* allowed to relay. If you
+don't have an external account send a 'help' command to a majordomo or
+simillar list server to get a reply.
+
+For each external server which attempts to send mail a file will be created
+in /var/qmail/greylist. Check this is happening. If it is not, check the
+permissions/owner on the directory - you will not receive any mail until this
+is fixed.
+
+
+
+Changes
+-------
+
+v0.3
+
+Updated default timeouts
+
+Added support for matching IPs based on class-C (/24) address, rather than the
+full IP address - enabled by default
+
+Added support for whitelists
+
+
+v0.2
+
+Changed to auto-configure the domain from /var/qmail/control/
+
+Fixed logging problem when removing old hosts
+
+Added greylist-info, a tool to dump the contents of the greylist database.
+
+
+v0.1
+
+Initial release
+
+
+
+Contact
+-------
+
+Jon Atkins <qgreylist@jonatkins.com>
+http://www.jonatkins.com/

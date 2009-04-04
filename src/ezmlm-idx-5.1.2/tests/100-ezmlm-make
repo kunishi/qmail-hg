@@ -1,0 +1,97 @@
+# $Id$
+
+##############
+# ezmlm-make #
+##############
+
+  prompt "ezmlm-make (1/2):     "
+
+# edit non-existant list
+  ${EZBIN}/ezmlm-make -e -C${EZBIN}/lang/en_US "$DIR" "$DOT" \
+	"$LOC" "$HOST" > /dev/null 2>&1 && \
+	fatal "ezmlm-make failed reject edit of non-existing list:"
+
+# make simple test list
+  ${EZBIN}/ezmlm-make -C${EZBIN}/lang/en_US "$DIR" "$DOT" \
+	"$LOC" "$HOST" || \
+	fatal "ezmlm-make failed to create test list"
+
+# remake simple test list which should fail
+  ${EZBIN}/ezmlm-make -C${EZBIN}/lang/en_US "$DIR" "$DOT" \
+	"$LOC" "$HOST" >/dev/null 2>&1 && \
+	fatal "failed to reject creation of existing list"
+
+# edit the list (add digest)
+  ${EZBIN}/ezmlm-make -+d -C${EZBIN}/lang/en_US "$DIR" || \
+	fatal "ezmlm-make failed to edit test list"
+
+# edit the list (add digest)
+  ${MV} "${DIR}/flags" "${DIR}/flags~"
+  ${EZBIN}/ezmlm-make -ed -C${EZBIN}/lang/en_US "$DIR" "$DOT" "$LOC" "$HOST" \
+	>/dev/null 2>&1 || \
+	{ ${ECHO} "failed without DIR/flags"
+	  prompt "ezmlm-make ......     "
+	}
+  ${MV} "${DIR}/flags~" "${DIR}/flags"
+
+  ${GREP} "ezmlm-weed" "${DIR}/bouncer" >/dev/null 2>&1 || \
+	fatal "no ezmlm-weed in bouncer"
+  ${GREP} "ezmlm-return" "${DIR}/bouncer" >/dev/null 2>&1 || \
+	{ ${ECHO} "no ezmlm-return in bouncer: 0.32 bug, fixed in 0.321."
+	  prompt "ezmlm-make ......     "
+	  BUG="${BUG} return"
+	}
+
+# digest/bouncer
+    if [ ! -f "${DIR}/digest/bouncer" ]; then
+	fatal "failed to create digest/bouncer";
+    fi
+    ${GREP} "ezmlm-weed" "${DIR}/digest/bouncer" >/dev/null 2>&1 || \
+	fatal "no ezmlm-weed in bouncer"
+    ${GREP} "ezmlm-return" "${DIR}/digest/bouncer" >/dev/null 2>&1 || \
+	{ ${ECHO} "no ezmlm-return in digest/bouncer: 0.32 bug, OK in 0.321."
+	  prompt "ezmlm-make ......     "
+	  BUG="${BUG} return"
+	}
+
+  ${ECHO} "OK"
+
+# Add sql files for sql testing
+RDBMS='STD'
+prompt "Using RDBMS support:  "
+if [ $USESQL ]; then
+  ${EZBIN}/ezmlm-make -+6 "$SQLHOST::$SQLUSER:$PW:$DB:$TABLE" \
+	-C${EZBIN}/lang/en_US "$DIR"|| \
+	fatal "ezmlm-make failed to add SQL config info"
+
+  ${STRINGS} ${EZBIN}/ezmlm-sub | ${GREP} -i 'MySQL' >/dev/null 2>&1 && \
+	RDBMS='MySQL'
+  ${STRINGS} ${EZBIN}/ezmlm-sub | ${GREP} -i 'libpq.' >/dev/null 2>&1 && \
+	RDBMS='PostgreSQL'
+  if [ "$RDBMS" = 'STD' ]; then
+	${ECHO} "No recognized support. If none, will default to std dbs."
+  else
+	${ECHO} "$RDBMS. Hope empty tables exist."
+  fi
+
+else
+	${ECHO} "No."
+fi
+
+  # remove inlocal/inhost - shouldn't be used
+  ${RM} -f "${DIR}/inlocal" "${DIR}/inhost" > /dev/null || \
+    fatal "failed to remove inlocal/inhost for testlist"
+
+#############################
+# set up qmail-queue script #
+#############################
+  (
+    ${ECHO} "#!/bin/sh"
+    ${ECHO} "${CAT} >'${QQMSG}'"
+    ${ECHO} "${CAT} <&1 >'${QQENV}'"
+    ${ECHO} "${SED} -e '/^$/,\$d' <'${QQMSG}' >'${QQHDR}'"
+    ${ECHO} "${SED} -e '1,/^$/d' <'${QQMSG}' >'${QQBODY}'"
+    ${ECHO} "cp '${QQMSG}' '${QQMSG}'.\$\$"
+    ${ECHO} "exit 0"
+  ) > "$QQTEST"
+  ${CHMOD} 755 "$QQTEST"

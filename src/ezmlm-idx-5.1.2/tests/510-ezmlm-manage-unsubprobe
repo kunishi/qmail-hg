@@ -1,0 +1,15 @@
+# $Id$
+
+  prompt "unsubscribe probe:    "
+
+  DEFAULT="unsubscribe"
+  LOCAL="${LOC}-${DEFAULT}"
+  ${EZBIN}/ezmlm-manage "$DIR" <"$TMP" >"$ERR" 2>&1 || \
+  fatal "failed to produce unsubscribe probe"
+
+  grephdr_manage
+  grephdr reply-to: "${LOC}-uc\\..*\\..*-test=example.org@${HOST}"
+  grephdr subject: "confirm unsubscribe from ${LOC}@${HOST}"
+  grephdr_empty
+
+  ${ECHO} OK

@@ -1,0 +1,3 @@
+cc -O2 -g
+
+This will be used to compile .c files.

@@ -1,0 +1,220 @@
+--- 822body handles well-formed message
+body1
+body2
+body3
+0
+--- 822body handles well-formed message
+body1^M
+body2^M
+body3^M
+0
+--- 822body handles ill-formed message
+body1
+body2
+body3
+0
+--- 822body handles header to EOF
+0
+--- 822headerok handles well-formed message
+0
+--- 822headerok handles well-formed message
+0
+--- 822headerok handles ill-formed message
+100
+--- 822headerok handles header to EOF
+0
+--- 822bodyfilter handles well-formed message
+From: someone@example.com
+CC: somebody@example.com
+To: another@example.com
+Subject: strangeness@example.com
+
+     1	body1
+     2	body2
+     3	body3
+0
+--- 822bodyfilter handles well-formed message
+From: someone@example.com^M
+CC: somebody@example.com^M
+To: another@example.com^M
+Subject: strangeness@example.com^M
+^M
+     1	body1^M
+     2	body2^M
+     3	body3^M
+0
+--- 822bodyfilter handles ill-formed message
+From: someone@example.com
+CC: somebody@example.com
+To: another@example.com
+Subject: strangeness@example.com
+     1	body1
+     2	body2
+     3	body3
+0
+--- 822bodyfilter handles header to EOF
+From: someone@example.com
+CC: somebody@example.com
+To: another@example.com
+Subject: strangeness@example.com0
+--- 822headerfilter handles well-formed message
+     1	From: someone@example.com
+     2	CC: somebody@example.com
+     3	To: another@example.com
+     4	Subject: strangeness@example.com
+
+body1
+body2
+body3
+0
+--- 822headerfilter handles well-formed message
+     1	From: someone@example.com^M
+     2	CC: somebody@example.com^M
+     3	To: another@example.com^M
+     4	Subject: strangeness@example.com^M
+^M
+body1^M
+body2^M
+body3^M
+0
+--- 822headerfilter handles ill-formed message
+     1	From: someone@example.com
+     2	CC: somebody@example.com
+     3	To: another@example.com
+     4	Subject: strangeness@example.com
+body1
+body2
+body3
+0
+--- 822headerfilter handles header to EOF
+     1	From: someone@example.com
+     2	CC: somebody@example.com
+     3	To: another@example.com
+     4	Subject: strangeness@example.com0
+--- tomaildir requires argument
+tomaildir: usage: tomaildir dir
+100
+--- tomaildir adds proper headers
+tomaildir
+0
+Return-Path: <someone@example.com>
+Delivered-To: another@example.com
+From: someone@example.com
+CC: somebody@example.com
+To: another@example.com
+Subject: strangeness@example.com
+
+body1
+body2
+body3
+--- condtomaildir requires argument
+condtomaildir: usage: condtomaildir dir program [ arg ... ]
+100
+--- condtomaildir handles nonexistent program
+0
+--- condtomaildir handles program permanent error
+0
+--- condtomaildir preserves exit 111
+condtomaildir: fatal: temporary child error
+111
+--- condtomaildir handles program success
+condtomaildir
+99
+Return-Path: <someone@example.com>
+Delivered-To: another@example.com
+From: someone@example.com
+CC: somebody@example.com
+To: another@example.com
+Subject: strangeness@example.com
+
+body1
+body2
+body3
+--- iftoccfrom uses RECIPIENT
+0
+--- iftoccfrom handles To
+0
+--- iftoccfrom handles Cc
+0
+--- iftoccfrom handles From
+0
+--- iftoccfrom handles well-formed message
+0
+--- iftoccfrom fails with CRLF
+100
+--- iftoccfrom handles ill-formed message
+0
+--- iftoccfrom handles header to EOF
+0
+--- iftoccfrom handles multiple addresses
+0
+--- 822headers works
+To: another@example.com
+Subject: strangeness@example.com
+0
+--- 822headers works with no matches
+100
+--- 822headers uses subject
+Subject: strangeness@example.com
+0
+--- 822headers handles ill-formed message
+To: another@example.com
+Subject: strangeness@example.com
+0
+--- 822headers handles header to EOF
+To: another@example.com
+Subject: strangeness@example.com0
+--- 822fields works
+ another@example.com
+ strangeness@example.com
+0
+--- 822fields works with no matches
+100
+--- 822fields uses subject
+ strangeness@example.com
+0
+--- 822fields handles ill-formed message
+ another@example.com
+ strangeness@example.com
+0
+--- 822fields handles header to EOF
+ another@example.com
+ strangeness@example.com
+0
+--- 822addr works
++someone@example.com^@+another@example.com^@0
+--- 822addr works with no matches
+100
+--- 822addr uses RECIPIENT
++somebody@example.com^@+another@example.com^@0
+--- 822addr handles ill-formed message
++another@example.com^@+strangeness@example.com^@0
+--- 822addr handles header to EOF
++another@example.com^@+strangeness@example.com^@0
+--- 822addr handles comments
+(someone^@+someone@example.com^@(somebody^@+somebody@example.com^@(another^@+another@example.com^@0
+--- checkaddr works
+0
+--- checkaddr uses RECIPIENT
+0
+--- checkaddr works with no match
+100
+--- checkdomain works
+0
+--- checkdomain uses RECIPIENT
+0
+--- checkdomain works with no match
+100
+--- ifaddr uses RECIPIENT
+0
+0
+--- ifaddr works without fields
+0
+0
+--- ifaddr works with fields
+0
+100
+--- ifaddr works with domain
+0
+0
+100

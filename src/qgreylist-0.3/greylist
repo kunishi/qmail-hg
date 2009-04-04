@@ -1,0 +1,418 @@
+#!/usr/bin/perl -w
+use strict;
+
+# Copyright (c) 2003 Jon Atkins http://www.jonatkins.com/
+#
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+
+
+my $version = "0.3";
+
+
+# TODO: alternative logging options, instead of syslog?
+
+use Sys::Syslog;
+
+
+openlog "greylist", "pid", "mail";
+
+
+# syslog "level", "%s", "message"
+# level is one of emerg, alert, crit, err, warning, notice, info, debug
+
+
+$| = 1;
+
+# if set, log connecting IP addresses...
+my $verbose = 1;
+
+# for more detailed debugging messages...
+my $debugmsg = 1;
+
+
+# location of qmail control files (for smtpgreeting or me)
+my $control = "/var/qmail/control";
+
+# domain name: used in smtp greetings, etc
+my $domain = "example.com";
+if ( open DOM, "$control/smtpgreeting" or open DOM, "$control/me" )
+{
+	$domain = <DOM>;
+	chomp $domain;
+
+	close DOM;
+}
+
+
+# location for ip files - must be writable by the relevent id (qmaild probably)
+my $base = "/var/qmail/greylist";
+
+# location for whitelist files (eg. yahoo groups - they don't retry!)
+my $whitelist = "/var/qmail/whitelist";
+
+
+
+# how long, after 1st seening an ip address, is it kept on the greylist
+# (a minute or two is good enough - a few spammers retry within 30 seconds
+#  or so, then never again. the others that do retry will do so for long enough
+#  to bypass any sensible value for this)
+my $greytime = 2 * 60;
+
+# how long, after seeing an ip address once, before is it forgotten about
+# (this needs to be high enough to allow for retry intervals of the
+#  most overloaded mail server, but low enough to avoid a 2nd spam from
+#  the same IP address) 
+my $maxageonce = 24 * 60 * 60;
+
+# how long, after seeing an ip address several times, before it is forgotten about
+# (this should be high enough that messages from weekly, if not monthly,
+#  mail lists do not expire from the list)
+my $maxagegood = 32 * 24 * 60 * 60;
+
+# how often to run IP address expiry (a minimum - this is only checked when mail arrives)
+# (when this runs the script does a stat() on every IP address file,
+#  but it does need to be small enough that the $maxage* values work)
+my $cleanupinterval = 15 * 60;
+
+# timeout to use waiting for smtp commands
+# (rfc2821 recommends at least 5 minutes for most commands)
+my $smtptimeout = 5 * 60;
+
+# greylist against entire class-c (/24) networks rather than IP addresses
+# if set to 1, greylist entire class-c networks rather than single IP addresses
+# this should help with clusters of mailservers which connect from separate
+# IP addresses with each delivery attempt (eg. yahoo groups)
+my $greylistclassc = 1;
+
+sub set_mtime
+{
+	my ( $file ) = @_;
+
+# TODO: error check this...
+	open FILE, "> $file" and close FILE;
+
+# now make sure that the mtime (and atime) is set to now
+	my $now = time;
+
+	utime $now, $now, $file;
+}
+
+sub set_atime
+{
+	my ( $file ) = @_;
+
+# set the atime to now, but leave the mtime alone
+	my $now = time;
+	my $mtime = (stat $file)[9];
+
+	utime $now, $mtime, $file;
+}
+
+sub get_atime_mtime
+{
+	my ( $file ) = @_;
+
+	return (stat $file)[8,9];
+}
+
+# check the ip file, or a network file matching the ip, exists
+# and return the atime + mtime of the file
+sub check_ip
+{
+	my ( $dir, $ip ) = @_;
+
+	return () unless $ip =~ m{^(\d+)\.(\d+)\.(\d+)\.(\d+)$};
+	my ( $a, $b, $c, $d ) = ( $1, $2, $3, $4 );
+
+	my @stat = get_atime_mtime "$dir/$a.$b.$c.$d";
+	return @stat if ( @stat );
+
+	@stat = get_atime_mtime "$dir/$a.$b.$c.";
+	return @stat if ( @stat );
+
+	@stat = get_atime_mtime "$dir/$a.$b.";
+	return @stat if ( @stat );
+
+	return ();
+}
+
+sub run_next_stage
+{
+#	syslog "debug", "%s", "starting ".(join ' ', @ARGV) if $debugmsg;
+
+	exec @ARGV or print "450 temporary problem - failed to start next process\r\n";
+
+	syslog "err", "failed to run next stage!";
+	exit;
+}
+
+# option 1: return a 450 error immediately
+#sub smtp_temp_fail
+#{
+#	my ( $message ) = ( @_ );
+#
+#	syslog "debug", "SMTP error: 450 %s", $message if $debugmsg;
+#	print "450 $message\r\n";
+#	exit;
+#}
+
+# option 2: perform a basic smtp responder
+# Why? See rfc2821 - 4.3.2 - it only mentions 220 and 521 as codes to be
+# expected on a new connection. some buggy MTAs may see an initial 4xx code
+# as a permanent error.
+# Another advantage of delayed rejection of messages is that we can log
+# the envelope information. This can be useful for debugging and/or monitoring.
+sub smtp_temp_fail
+{
+	my ( $message ) = ( @_ );
+
+	my %commands =
+	(
+		'HELO' => "250 hello",
+		'EHLO' => "250 hello",
+		'MAIL' => "250 Mail from <>",
+		'RCPT' => "450 Rcpt to <> - $message",
+		'DATA' => "451 $message",
+		'RSET' => "250 ready",
+		'VRFY' => "502 not implemented",
+		'EXPN' => "502 not implemented",
+		'HELP' => "502 not implemented",
+		'NOOP' => "250 noop",
+		'QUIT' => "221 $domain Bye",
+	);
+
+
+
+# you may want to change the greeting to something else...
+	print "220 $domain qgreylist $version\r\n";
+
+
+	$SIG{ALRM} = sub
+	{
+		syslog "debug", "SMTP: timeout: connection closed" if $debugmsg;
+
+		print "421 $domain timeout\r\n";
+		exit;
+	};
+
+
+	alarm $smtptimeout;
+	while ( my $line = <STDIN> )
+	{
+		alarm 0;
+
+		sleep 1;	# brief delay, to annoy spammers
+
+		alarm $smtptimeout;
+
+
+		$line =~ s/\r?\n?$//;
+
+##		syslog "debug", "SMTP debug: >>> %s", $line if $debugmsg;
+
+		my ( $command, $parms ) = split / +/, $line, 2;
+
+		$command = uc $command;
+
+		if ( defined $commands{$command} )
+		{
+			my $reply = $commands{$command};
+
+			if ( $reply =~ m/<>/ )
+			{
+				my $addr = $parms || "?";
+				$addr =~ s/^(from|to):? *//i;
+
+				$reply =~ s/<>/$addr/;
+			}
+
+			syslog "debug", "SMTP: %s: %s", $command, $reply if $debugmsg;
+			print "$reply\r\n";
+		}
+		else
+		{
+			print "500 $command not known\r\n";
+		}
+
+		last if $command eq 'QUIT';
+	}
+
+	syslog "debug", "SMTP: connection closed" if $debugmsg;
+	exit;
+}
+
+
+sub isotime
+{
+	my ( $time ) = @_;
+
+	my ( $sec, $min, $hour, $mday, $mon, $year, undef, undef, undef ) = localtime $time;
+
+	my $isotime = sprintf "%04d-%02d-%02d %02d:%02d", $year+1900, $mon+1, $mday, $hour, $min, $sec;
+
+	return $isotime;
+}
+
+sub cleanup
+{
+	my $time = time;
+
+	foreach my $file ( <$base/*> )
+	{
+		# changed to allow for partial IP addresses, to allow for
+		# matching against class-b and class-c networks
+#		if ( $file =~ m{/([0-9]+\.[0-9]+\.(?:[0-9]+\.(?:[0-9]+)))$} )
+		if ( $file =~ m{/([0-9.]+)$} )
+		{
+			my $ip = $1;
+
+			my ( $atime, $mtime ) = (stat $file)[8,9];
+
+			# if the stat failed, we've probably got two separate processes cleaning at the same time...
+			next unless defined $atime and defined $mtime;
+
+			if ( $atime == $mtime )
+			{
+				if ( $atime < $time - $maxageonce )
+				{
+					syslog "info", "forgetting %s (seen once at %s)", $ip, isotime $atime if $verbose;
+
+					unlink $file or syslog "err", "failed to unlink $file";
+				}
+			}
+			else
+			{
+				if ( $atime < $time - $maxagegood )
+				{
+					syslog "info", "forgetting %s (first seen %s, last %s)", $ip, (isotime $mtime), (isotime $atime) if $verbose;
+
+					unlink $file or syslog "err", "failed to unlink $file";
+				}
+			}
+
+		}
+		# else not an IP address...
+	}
+}
+
+
+sub cleanup_maybe
+{
+	my $lastclean = -M "$base/.lastcleanup";
+
+	# avoid doing this on every smtp connection
+	if ( !defined $lastclean or $lastclean > $cleanupinterval / (24*60*60) )
+	{
+		syslog "debug", "running cleanup" if $debugmsg;
+
+		set_mtime "$base/.lastcleanup";
+		cleanup;
+	}
+}
+
+
+
+# ------------------------------------------------------------
+# main code starts here......
+
+# clean up old IPs from the greylist folder...
+cleanup_maybe;
+
+
+# TODO: change to an immediate error here..?
+unless ( defined $ENV{TCPREMOTEIP} )
+{
+	syslog "err", "ENV{TCPREMOEIP} not set!";
+	smtp_temp_fail "Cannot find remote IP";
+}
+
+# now this should never happen...
+unless ( $ENV{TCPREMOTEIP} =~ m{^(\d+\.\d+\.\d+\.\d+)$} )
+{
+	syslog "err", "ENV{TCPREMOEIP} = $ENV{TCPREMOTEIP} - bad format!";
+	smtp_temp_fail "Bad format for remote IP";
+}
+
+my $remoteip = $1;
+
+
+# IPs we relay for don't get greylisted...
+if ( defined $ENV{RELAYCLIENT} )
+{
+	syslog "debug", "Local IP accepted" if $debugmsg;
+	run_next_stage;
+}
+
+
+# ok - whitelisted IPs
+if ( check_ip $whitelist, $remoteip )
+{
+	syslog "debug", "IP $remoteip whitelisted" if $debugmsg;
+	run_next_stage;
+}
+
+# ok - now check to see if we should greylist this ip address...
+
+my $checkfile;
+if ( $greylistclassc )
+{
+	$remoteip =~ m{^(\d+\.\d+\.\d+\.)\d+$};
+	$checkfile = $base."/".$1;
+}
+else
+{
+	$checkfile = $base."/".$remoteip;}
+
+#my $mtime = -M $checkfile;
+
+my ( $atime, $mtime ) = check_ip $base, $remoteip;
+
+if ( ! defined $mtime )
+{
+	# we don't know of this IP address - return a temporary error
+
+	syslog "info", "IP %s new - temp error", $remoteip if $verbose;
+
+	# touch the file so we remember this IP for next time
+	set_mtime $checkfile;
+
+	smtp_temp_fail "Temporary local problem - try later";
+}
+#elsif ( $mtime < ( $greytime / (60*60*24) ) )	# NOTE: scale from seconds to days as returned by -M
+elsif ( (time - $mtime) < $greytime )
+{
+	# we already knew of the ip, but very recently - temp error again
+
+	syslog "info", "IP %s back too soon - temp error again", $remoteip if $verbose;
+
+##	set_atime $checkfile;
+
+	smtp_temp_fail "Temporary local problem - I said try later";
+}
+
+# ok - we already knew and more than a few minutes ago
+
+syslog "info", "IP %s OK - accepting", $remoteip if $verbose;
+
+# access the check file as it's a good IP
+set_atime $checkfile;
+
+# then launch qmail-smtpd or whatever...
+run_next_stage;
+

@@ -1,0 +1,5 @@
+/var/qmail
+
+This is the qmail home directory. The qmail-conf programs will be
+installed in the bin subdirectory. qmail-conf assumes that the qmail
+programs are installed in the bin subdirectory.

@@ -1,0 +1,4 @@
+/usr/local
+
+This is the ucspi-tcp home directory. qmail-conf assumes that the
+tcpserver program is installed in the bin subdirectory.

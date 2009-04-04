@@ -1,0 +1,4 @@
+/var/qmail
+
+This is the qmail home directory.  The subdirectory .../bin should
+contain the qmail executables.

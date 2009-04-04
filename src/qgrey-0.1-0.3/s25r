@@ -1,0 +1,102 @@
+# Client restriction specifications for Postfix aiming at anti-UCE
+# Contributed by ASAMI Hideo (Japan), Jun. 2004
+# Refer to: http://www.gabacho-net.jp/en/anti-spam/
+#
+# Changed by SATOH Kiyoshi for postgrey 2004/9/16
+#
+# To use this file, add following lines into the /etc/postfix/main.cf file:
+#
+# smtpd_client_restrictions =
+#   permit_mynetworks,
+#   check_client_access regexp:/etc/postfix/client_restrictions,
+#   reject_unknown_client
+#
+# where "client_restrictions" is the name of this file.
+#
+#
+# *** GENERIC PROTECTION ***
+#
+# [rule 0]
+/^unknown$/
+#
+# [rule 1]
+# ex: evrtwa1-ar3-4-65-157-048.evrtwa1.dsl-verizon.net
+# ex: a12a190.neo.rr.com
+/^[^\.]*[0-9][^0-9\.]+[0-9]/
+#
+# [rule 2]
+# ex: pcp04083532pcs.levtwn01.pa.comcast.net
+/^[^\.]*[0-9]{5}/
+#
+# [rule 3]
+# ex: 398pkj.cm.chello.no
+# ex: host.101.169.23.62.rev.coltfrance.com
+/^([^\.]+\.)?[0-9][^\.]*\.[^\.]+\..+\.[a-z]/
+#
+# [rule 4]
+# ex: wbar9.chi1-4-11-085-222.dsl-verizon.net
+/^[^\.]*[0-9]\.[^\.]*[0-9]-[0-9]/
+#
+# [rule 5]
+# ex: d5.GtokyoFL27.vectant.ne.jp
+/^[^\.]*[0-9]\.[^\.]*[0-9]\.[^\.]+\..+\./
+#
+# [rule 6]
+# ex: dhcp0339.vpm.resnet.group.upenn.edu
+# ex: dialupM107.ptld.uswest.net
+# ex: PPPbf708.tokyo-ip.dti.ne.jp
+# ex: adsl-1415.camtel.net
+/^(dhcp|dialup|ppp|adsl)[^\.]*[0-9]/
+#
+#
+# *** BLACK LIST ***
+#
+# When you find a UCE sender's FQDN which is not rejected by the generic
+# protection rules specified below, insert here a denial specification taking
+# a leaf from the following practical examples. You should specify a subdomain
+# name or a substring together with the domain name if possible so that you can
+# avoid rejecting proper mail relay servers in the same domain.
+#
+# pD9E799A1.dip.t-dialin.net (hexadecimal used)
+/\.dip\.t-dialin\.net$/
+#
+# ool-43511bdc.dyn.optonline.net (hexadecimal used)
+/\.dyn\.optonline\.net$/
+#
+# zaq3d7d6ded.zaq.ne.jp (hexadecimal used)
+/^zaq.+\.zaq\.ne\.jp$/
+#
+# user-0cetcbr.cable.mindspring.com
+# user-vc8fldi.biz.mindspring.com
+/^user.+\.mindspring\.com$/
+#
+# rt-dkz-1699.adsl.wanadoo.nl
+# c3eea5738.cable.wanadoo.nl (hexadecimal used)
+/\.(adsl|cable)\.wanadoo\.nl$/
+#
+# pr86.internetdsl.tpnet.pl
+# fq217.neoplus.adsl.tpnet.pl
+# pa148.braniewo.sdi.tpnet.pl
+/\.(internetdsl|adsl|sdi)\.tpnet\.pl$/
+#
+# ACBBD419.ipt.aol.com (hexadecimal used)
+/\.ipt\.aol\.com$/
+#
+# mail103.USADEALS4YOU.com
+# mail131.BEST-OFFERS-HERE.net
+# Name Server: NS1.123DEALSFORU.COM
+66.248.152
+#
+# other grey clients
+/\.ppp\.u-netsurf\.ne\.jp$/
+/\.dataspain\.com$/
+/\.stocknewsalert\.net$/
+/\.mtaonline\.net$/
+/\.dsl\.iowatelecom\.net$/
+/\.va\.us$/
+/\.tiscali\.com$/
+/\.ezooom\.com$/
+/\.mediasat\.ro$/
+/\.edoca\.com$/
+/\.ns\.sanwascreen\.co\.jp$/
+#

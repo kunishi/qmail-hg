@@ -1,0 +1,127 @@
+This patch might be found useful if you would try ASAMI Hideo's idea
+described at http://www.gabacho-net.jp/en/anti-spam/ on qmail.
+
+To try sample rules on the above site, you can put the following lines
+into /var/qmail/control/badremotehost:
+
+^[^\.]*[0-9][^0-9\.]+[0-9]
+^[^\.]*[0-9]{5}
+^([^\.]+\.)?[0-9][^\.]*\.[^\.]+\..+\.[a-z]
+^[^\.]*[0-9]\.[^\.]*[0-9]-[0-9]
+^[^\.]*[0-9]\.[^\.]*[0-9]\.[^\.]+\..+\.
+^(dhcp|dialup|ppp|adsl)[^\.]*[0-9]
+# IP address due to no FQDN
+[0-9]$
+
+And also white list into /var/qmail/control/goodremotehost as follows:
+
+# Jun. 06, 2004: iad-fw-global.amazon.com
+^207\.171\.(167\.25|172\.6)$
+# Oct. 28, 2004: 207-171-180-101.amazon.com
+\.amazon\.com$
+
+
+Any suggestions for improvements or corrections are welcome at naokih at
+iron-horse dot org.
+
+--- Makefile.orig	Mon Jun 15 03:53:16 1998
++++ Makefile	Wed Nov 24 02:34:30 2004
+@@ -1534,12 +1534,12 @@
+ qmail-smtpd: \
+ load qmail-smtpd.o rcpthosts.o commands.o timeoutread.o \
+ timeoutwrite.o ip.o ipme.o ipalloc.o control.o constmap.o received.o \
+-date822fmt.o now.o qmail.o cdb.a fd.a wait.a datetime.a getln.a \
++date822fmt.o now.o qmail.o cdb.a fd.a wait.a datetime.a getln.a strerr.a \
+ open.a sig.a case.a env.a stralloc.a alloc.a substdio.a error.a str.a \
+ fs.a auto_qmail.o socket.lib
+ 	./load qmail-smtpd rcpthosts.o commands.o timeoutread.o \
+ 	timeoutwrite.o ip.o ipme.o ipalloc.o control.o constmap.o \
+-	received.o date822fmt.o now.o qmail.o cdb.a fd.a wait.a \
++	received.o date822fmt.o now.o qmail.o cdb.a fd.a wait.a strerr.a \
+ 	datetime.a getln.a open.a sig.a case.a env.a stralloc.a \
+ 	alloc.a substdio.a error.a str.a fs.a auto_qmail.o  `cat \
+ 	socket.lib`
+--- qmail-smtpd.c.orig	Mon Jun 15 03:53:16 1998
++++ qmail-smtpd.c	Wed Nov 24 02:34:30 2004
+@@ -50,6 +50,7 @@
+ void straynewline() { out("451 See http://pobox.com/~djb/docs/smtplf.html.\r\n"); flush(); _exit(1); }
+ 
+ void err_bmf() { out("553 sorry, your envelope sender is in my badmailfrom list (#5.7.1)\r\n"); }
++void err_brh() { out("450 sorry, your remotehost looks suspiciously like spammer. (#5.7.1)\r\n"); }
+ void err_nogateway() { out("553 sorry, that domain isn't in my list of allowed rcpthosts (#5.7.1)\r\n"); }
+ void err_unimpl() { out("502 unimplemented (#5.5.1)\r\n"); }
+ void err_syntax() { out("555 syntax error (#5.5.4)\r\n"); }
+@@ -216,6 +217,61 @@
+   return r;
+ }
+ 
++#include "strerr.h"
++#include <sys/types.h>
++#include <regex.h>
++
++int is_regex_matched(char *regex, char *str)
++{
++  int rc;
++  regex_t reg;
++
++  rc = regcomp(&reg,regex,REG_EXTENDED|REG_ICASE);
++  if (!rc) rc = regexec(&reg,str,0,0,0);
++  regfree(&reg);
++
++  return rc ? 0 : 1;
++}
++
++int brhcheck()
++{
++  stralloc control = {0};
++  char *rh, *regex;
++  int i, rc;
++
++  rh = env_get("TCPREMOTEHOST");
++  if (!rh) rh = env_get("TCPREMOTEIP");
++
++  /* check white list */
++  rc = control_readfile(&control,"control/goodremotehost",0);
++  if (rc == -1) die_control();
++  if (rc) {
++    for (i=0;i<control.len;i++) {
++      regex = control.s + i;
++      if (is_regex_matched(regex,rh)) {
++        strerr_warn4("qmail-smtpd: goodremotehost: ",rh," matched ",regex,0);
++        return 1;
++      }
++      for (;control.s[i]; i++);
++    }
++  }
++
++  /* check black list */
++  rc = control_readfile(&control,"control/badremotehost",0);
++  if (rc == -1) die_control();
++  if (rc) {
++    for (i=0;i<control.len;i++) {
++      regex = control.s + i;
++      if (is_regex_matched(regex,rh)) {
++        strerr_warn4("qmail-smtpd: badremotehost: ",rh," matched ",regex,0);
++        return 0;
++      }
++      for (;control.s[i]; i++);
++    }
++  }
++
++  return 1;
++}
+ 
+ int seenmail = 0;
+ int flagbarf; /* defined if seenmail */
+@@ -258,6 +314,11 @@
+   }
+   else
+     if (!addrallowed()) { err_nogateway(); return; }
++  if (!relayclient) if (!brhcheck()) {
++    strerr_warn5("qmail-smtpd: mailfrom <",mailfrom.s,"> rcptto <",addr.s,">",0);
++    err_brh();
++    return;
++  }
+   if (!stralloc_cats(&rcptto,"T")) die_nomem();
+   if (!stralloc_cats(&rcptto,addr.s)) die_nomem();
+   if (!stralloc_0(&rcptto)) die_nomem();

@@ -1,0 +1,3321 @@
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/auto-str.c ./auto-str.c
+--- auto-str.c	1997-06-29 21:11:54.000000000 -0600
++++ auto-str.c	2007-10-05 11:25:27.000000000 -0600
+@@ -1,19 +1,14 @@
++#include "subfd.h"
+ #include "substdio.h"
+ #include "readwrite.h"
+ #include "exit.h"
+ 
+-char buf1[256];
+-substdio ss1 = SUBSTDIO_FDBUF(write,1,buf1,sizeof(buf1));
+-
+-void puts(s)
+-char *s;
++void subputs(const char *s)
+ {
+-  if (substdio_puts(&ss1,s) == -1) _exit(111);
++  if (substdio_puts(subfdout,s) == -1) _exit(111);
+ }
+ 
+-void main(argc,argv)
+-int argc;
+-char **argv;
++int main(int argc, char **argv)
+ {
+   char *name;
+   char *value;
+@@ -25,20 +20,21 @@
+   value = argv[2];
+   if (!value) _exit(100);
+ 
+-  puts("char ");
+-  puts(name);
+-  puts("[] = \"\\\n");
++  subputs("const char ");
++  subputs(name);
++  subputs("[] = \"\\\n");
+ 
+-  while (ch = *value++) {
+-    puts("\\");
++  while ((ch = *value++) != 0) {
++    subputs("\\");
+     octal[3] = 0;
+     octal[2] = '0' + (ch & 7); ch >>= 3;
+     octal[1] = '0' + (ch & 7); ch >>= 3;
+     octal[0] = '0' + (ch & 7);
+-    puts(octal);
++    subputs(octal);
+   }
+ 
+-  puts("\\\n\";\n");
+-  if (substdio_flush(&ss1) == -1) _exit(111);
+-  _exit(0);
++  subputs("\\\n\";\n");
++  if (substdio_flush(subfdout) == -1) _exit(111);
++  return 0;
++  (void)argc;
+ }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/case_startb.c ./case_startb.c
+--- case_startb.c	1997-06-29 21:11:54.000000000 -0600
++++ case_startb.c	2007-10-01 15:44:16.000000000 -0600
+@@ -1,12 +1,9 @@
+ #include "case.h"
+ 
+-int case_startb(s,len,t)
+-register char *s;
+-unsigned int len;
+-register char *t;
++int case_startb(const char *s,unsigned int len,const char *t)
+ {
+-  register unsigned char x;
+-  register unsigned char y;
++  unsigned char x;
++  unsigned char y;
+ 
+   for (;;) {
+     y = *t++ - 'A';
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/constmap.c ./constmap.c
+--- constmap.c	1997-06-29 21:11:54.000000000 -0600
++++ constmap.c	2007-10-01 15:44:17.000000000 -0600
+@@ -2,9 +2,7 @@
+ #include "alloc.h"
+ #include "case.h"
+ 
+-static constmap_hash hash(s,len)
+-char *s;
+-int len;
++static constmap_hash hash(const char *s,int len)
+ {
+   unsigned char ch;
+   constmap_hash h;
+@@ -18,10 +16,34 @@
+   return h;
+ }
+ 
+-char *constmap(cm,s,len)
+-struct constmap *cm;
+-char *s;
+-int len;
++/* Returns index of string in constmap. 1 = first string, 2 = second ... */
++/* 0 not found. Use for commands */ 
++int constmap_index(const struct constmap *cm,const char *s,int len)
++{
++  constmap_hash h;
++  int pos;
++  h = hash(s,len);
++  pos = cm->first[h & cm->mask];
++  while (pos != -1) {
++    if (h == cm->hash[pos])
++      if (len == cm->inputlen[pos])
++        if (!case_diffb(cm->input[pos],len,s))
++	  return pos + 1;
++    pos = cm->next[pos];
++  }
++  return 0;
++}
++
++/* returns pointer to sz of string with index "idx". 1 = first, 2 = second...*/
++const char *constmap_get(struct constmap *cm,unsigned int idx)
++{
++  if (idx <= 0 || idx > cm->num)
++    return 0;
++  else
++    return cm->input[idx-1];
++}
++
++const char *constmap(struct constmap *cm,const char *s,int len)
+ {
+   constmap_hash h;
+   int pos;
+@@ -37,11 +59,10 @@
+   return 0;
+ }
+ 
+-int constmap_init(cm,s,len,flagcolon)
+-struct constmap *cm;
+-char *s;
+-int len;
+-int flagcolon;
++int constmap_init(struct constmap *cm,const char *s,int len,int flagcolon)
++/* if flagcolon is true, we process only the stuff before the colon on */
++/* each line. Otherwise, it's the entire line. Still, the entire line */
++/* is stored! */
+ {
+   int i;
+   int j;
+@@ -58,7 +79,7 @@
+  
+   cm->first = (int *) alloc(sizeof(int) * h);
+   if (cm->first) {
+-    cm->input = (char **) alloc(sizeof(char *) * cm->num);
++    cm->input = (const char **) alloc(sizeof(char *) * cm->num);
+     if (cm->input) {
+       cm->inputlen = (int *) alloc(sizeof(int) * cm->num);
+       if (cm->inputlen) {
+@@ -103,8 +124,7 @@
+   return 0;
+ }
+ 
+-void constmap_free(cm)
+-struct constmap *cm;
++void constmap_free(struct constmap *cm)
+ {
+   alloc_free(cm->next);
+   alloc_free(cm->hash);
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/constmap.h ./constmap.h
+--- constmap.h	1997-06-29 21:11:54.000000000 -0600
++++ constmap.h	2007-10-01 15:44:17.000000000 -0600
+@@ -4,17 +4,18 @@
+ typedef unsigned long constmap_hash;
+ 
+ struct constmap {
+-  int num;
++  unsigned int num;
+   constmap_hash mask;
+   constmap_hash *hash;
+   int *first;
+   int *next;
+-  char **input;
++  const char **input;
+   int *inputlen;
+ } ;
+ 
+-extern int constmap_init();
+-extern void constmap_free();
+-extern char *constmap();
+-
++extern int constmap_init(struct constmap *cm,const char *s,int len,int flagcolon);
++extern void constmap_free(struct constmap *cm);
++extern const char *constmap(struct constmap *cm,const char *s,int len);
++extern const char *constmap_get(struct constmap *cm,unsigned int idx);
++extern int constmap_index(const struct constmap *cm,const char *s,int len);
+ #endif
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/cookie.c ./cookie.c
+--- cookie.c	1997-06-29 21:11:54.000000000 -0600
++++ cookie.c	2007-10-01 23:16:30.000000000 -0600
+@@ -3,13 +3,12 @@
+ #include "uint32.h"
+ #include "surfpcs.h"
+ 
+-void cookie(hash,key,keylen,date,addr,action)
+-char *hash;
+-char *key;
+-unsigned int keylen;
+-char *date;
+-char *addr;
+-char *action;
++void cookie(char *hash,
++	    const char *key,
++	    unsigned int keylen,
++	    const char *date,
++	    const char *addr,
++	    const char *action)
+ {
+   surfpcs s;
+   uint32 seed[32];
+@@ -17,6 +16,10 @@
+   int i;
+   int j;
+ 
++  /* addr may be passed in as a NULL pointer.
++   * Make sure it points to a non-NULL empty string. */
++  if (addr == 0) addr = "";
++
+ /*
+ step 1: create seed from key. note that this doesn't have to be
+ cryptographic; it simply has to avoid destroying the user's entropy.
+@@ -25,7 +28,7 @@
+   for (i = 0;i < 32;++i) seed[i] = 0;
+   for (j = 0;j < 4;++j) {
+     surfpcs_init(&s,seed);
+-    surfpcs_add(&s,key,keylen);
++    surfpcs_add(&s,(const unsigned char*)key,keylen);
+     surfpcs_out(&s,out);
+     for (i = 0;i < 32;++i) seed[i] = (seed[i] << 8) + out[i];
+   }
+@@ -34,9 +37,9 @@
+ step 2: apply SURF.
+ */
+   surfpcs_init(&s,seed);
+-  surfpcs_add(&s,date,str_len(date) + 1);
+-  surfpcs_add(&s,addr,str_len(addr) + 1);
+-  surfpcs_add(&s,action,1);
++  surfpcs_add(&s,(const unsigned char*)date,str_len(date) + 1);
++  surfpcs_add(&s,(const unsigned char*)addr,str_len(addr) + 1);
++  surfpcs_add(&s,(const unsigned char*)action,1);
+   surfpcs_out(&s,out);
+ 
+ /*
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/cookie.h ./cookie.h
+--- cookie.h	1997-06-29 21:11:54.000000000 -0600
++++ cookie.h	2007-10-01 15:44:17.000000000 -0600
+@@ -3,6 +3,11 @@
+ 
+ #define COOKIE 20
+ 
+-extern void cookie();
++extern void cookie(char *hash,
++		   const char *key,
++		   unsigned int keylen,
++		   const char *date,
++		   const char *addr,
++		   const char *action);
+ 
+ #endif
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/date822fmt.c ./date822fmt.c
+--- date822fmt.c	1997-06-29 21:11:54.000000000 -0600
++++ date822fmt.c	2007-10-01 15:44:17.000000000 -0600
+@@ -2,13 +2,13 @@
+ #include "fmt.h"
+ #include "date822fmt.h"
+ 
+-static char *montab[12] = {
++static const char *montab[12] = {
+ "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
+ };
+ 
+ unsigned int date822fmt(s,dt)
+ char *s;
+-struct datetime *dt;
++const struct datetime *dt;
+ {
+   unsigned int i;
+   unsigned int len;
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/date822fmt.h ./date822fmt.h
+--- date822fmt.h	1997-06-29 21:11:54.000000000 -0600
++++ date822fmt.h	2007-10-01 15:44:17.000000000 -0600
+@@ -1,7 +1,8 @@
+ #ifndef DATE822FMT_H
+ #define DATE822FMT_H
+ 
+-extern unsigned int date822fmt();
++struct datetime;
++extern unsigned int date822fmt(char *, const struct datetime *);
+ #define DATE822FMT 60
+ 
+ #endif
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/datetime.c ./datetime.c
+--- datetime.c	1997-06-29 21:11:54.000000000 -0600
++++ datetime.c	2007-10-01 15:44:17.000000000 -0600
+@@ -1,9 +1,7 @@
+ /* 19950925 */
+ #include "datetime.h"
+ 
+-void datetime_tai(dt,t)
+-struct datetime *dt;
+-datetime_sec t;
++void datetime_tai(struct datetime *dt,datetime_sec t)
+ {
+   int day;
+   int tod;
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/datetime.h ./datetime.h
+--- datetime.h	1997-06-29 21:11:54.000000000 -0600
++++ datetime.h	2007-10-01 15:44:17.000000000 -0600
+@@ -14,7 +14,6 @@
+ 
+ typedef long datetime_sec;
+ 
+-extern void datetime_tai();
+-extern datetime_sec datetime_untai();
++extern void datetime_tai(struct datetime *dt,datetime_sec t);
+ 
+ #endif
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/envread.c ./envread.c
+--- envread.c	1997-06-29 21:11:54.000000000 -0600
++++ envread.c	2007-10-01 15:44:17.000000000 -0600
+@@ -1,27 +1,20 @@
+ #include "env.h"
+ #include "str.h"
+ 
+-extern /*@null@*/char *env_get(s)
+-char *s;
++/*@null@*/char *env_get(const char *s)
+ {
+   int i;
+   unsigned int slen;
+   char *envi;
+  
+   slen = str_len(s);
+-  for (i = 0;envi = environ[i];++i)
++  for (i = 0;(envi = environ[i]) != 0;++i)
+     if ((!str_diffn(s,envi,slen)) && (envi[slen] == '='))
+       return envi + slen + 1;
+   return 0;
+ }
+ 
+-extern char *env_pick()
+-{
+-  return environ[0];
+-}
+-
+-extern char *env_findeq(s)
+-char *s;
++extern const char *env_findeq(const char *s)
+ {
+   for (;*s;++s)
+     if (*s == '=')
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/ezmlm-list.1 ./ezmlm-list.1
+--- ezmlm-list.1	1997-06-29 21:11:54.000000000 -0600
++++ ezmlm-list.1	2007-10-05 11:25:27.000000000 -0600
+@@ -1,14 +1,27 @@
++.\" $Id$
+ .TH ezmlm-list 1
+ .SH NAME
+ ezmlm-list \- show the addresses on a mailing list
+ .SH SYNOPSIS
+ .B ezmlm-list
++[
++.B \-n\fI msgnum
++] [
++.B \-aAmMnNvV
++]
+ .I dir
++[
++.I subdir
++]
+ .SH DESCRIPTION
+ .B ezmlm-list
+ prints the subscriber list for the mailing list stored in
+-.IR dir ,
+-one address per line.
++.I dir
++(or
++.IR dir / subdir
++if the
++.I subdir
++parameter is present), one address per line.
+ 
+ .B WARNING:
+ Unless you have disabled automatic subscriptions,
+@@ -16,6 +29,40 @@
+ of a possibly malicious remote user.
+ .B ezmlm-list
+ does not strip control characters.
++.SH "GENERAL OPTIONS"
++.TP
++.B \-m
++(Default.)
++Use SQL support if available.
++.TP
++.B \-M
++Do not use SQL support even if available.
++This option can be used to manipulate
++a normal local subscriber database even for lists with SQL support.
++.TP
++.B \-n
++Print only the number of subscribers.
++.TP
++.B \-N
++(Default.)
++List subscriber addresses, one per line.
++.TP
++.B \-v
++Display
++.B ezmlm-list(1)
++version information.
++.TP
++.B \-V
++Display
++.B ezmlm-list(1)
++version information.
++.SH "SEE ALSO"
++ezmlm-list(1),
++ezmlm-manage(1),
++ezmlm-make(1),
++ezmlm-send(1),
++ezmlm-sub(1),
++ezmlm(5)
+ .SH "SEE ALSO"
+ ezmlm-sub(1),
+ ezmlm-unsub(1),
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/ezmlm-return.1 ./ezmlm-return.1
+--- ezmlm-return.1	1997-06-29 21:11:54.000000000 -0600
++++ ezmlm-return.1	2007-10-01 15:44:17.000000000 -0600
+@@ -1,14 +1,19 @@
++.\" $Id$
+ .TH ezmlm-return 1
+ .SH NAME
+ ezmlm-return \- handle mailing list bounces
+ .SH SYNOPSIS
+ .B ezmlm-return
++[
++.B \-dD
++]
+ .I dir
+ .SH DESCRIPTION
+ .B ezmlm-return
+ handles bounces for the mailing list
+ stored in
+-.IR dir .
++.I dir
++and, if it exists, the associated digest list.
+ 
+ .B ezmlm-return
+ is normally invoked from a
+@@ -21,6 +26,30 @@
+ and
+ .BR HOST
+ environment variables.
++
++.B ezmlm-return
++exits 99, not 0, upon success.
++.SH OPTIONS
++.TP
++.B \-d
++.B ezmlm-return
++will assume the bounce is for a digest list.
++Normally,
++.B ezmlm-return
++will autodetect this from the bounce address. Autodetection makes
++.B ezmlm-return
++less flexible and will be removed in future versions.
++.TP
++.B \-D
++.B ezmlm-return
++will assume that the bounce is for a normal (non-digest) list.
++Normally,
++.B ezmlm-return
++will autodetect this from the bounce address. Autodetection makes
++.B ezmlm-return
++less flexible and will be removed in future versions.
++.B \-D
++will become the default.
+ .SH ADDRESSES
+ .B ezmlm-return
+ handles mail sent to any of the following addresses:
+@@ -59,6 +88,21 @@
+ will remove
+ .I box\fB@\fIdomain
+ from the mailing list.
++.TP
++.I local\fB\-return\-receipt\-\fIcookie\-fImsg\-
++A receipt from the list. This is logged. For SQL supporting lists,
++.I cookie
++is verified and receipt logged only if the cookie is correct. The arrival
++of the receipt shows that qmail at the sending host is running.
++
++For all the above addresses if,
++.I local
++is followed by
++.IR \-digest ,
++bounces are assumed to be from the digest list, and are stored in
++.I dir\fB/digest/bounce
++rather than in
++.I dir \fB/bounce .
+ .SH "SEE ALSO"
+ ezmlm-manage(1),
+ ezmlm-make(1),
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/ezmlm-send.1 ./ezmlm-send.1
+--- ezmlm-send.1	1997-06-29 21:11:54.000000000 -0600
++++ ezmlm-send.1	2007-10-02 10:11:52.000000000 -0600
+@@ -1,8 +1,14 @@
++.\" $Id$
+ .TH ezmlm-send 1
+ .SH NAME
+ ezmlm-send \- distribute a message to a mailing list
+ .SH SYNOPSIS
+ .B ezmlm-send
++[
++.B \-cCrRvV
++] [
++.B \-h\fI header
++]
+ .I dir
+ .SH DESCRIPTION
+ .B ezmlm-send
+@@ -14,9 +20,34 @@
+ exists,
+ .B ezmlm-send
+ records a copy of the message in the
+-.I dir\fB/archive
++.I dir\fB/archive/
+ directory.
+ 
++If
++.I dir\fB/indexed
++exists,
++.B ezmlm-send
++adds the subject, author and time stamp of the message to the index, kept with
++the message in a subdirectory of
++.IR dir\fB/archive/ .
++The subject is processed to make reply-subject entries identical to
++original
++message subject entries.
++The subject index is used for the archive retrieval functions of
++.BR ezmlm-get(1) .  
++Use
++.B ezmlm-idx(1)
++to create a subject index from a preexisting archive.
++
++Subject and author lines are decoded if they are encoded per rfc2047. When
++split lines are unfolded, the number of escape sequences for
++iso-2022-* character sets is minimized. For instance, two
++consequtive toascii sequences are reduced.
++This processing is done for the character set specified in
++.IR dir\fB/charset .
++The result of this process is the same for a given subject, irrespective
++of encoding.
++
+ At the beginning of the message,
+ .B ezmlm-send
+ prints a new
+@@ -27,17 +58,98 @@
+ .B Mailing-List
+ field.
+ 
++If
++.I dir\fB/listid
++exists,
++.B ezmlm-send
++will assume that the format is correct and
++create a ``List-ID:'' header by placing the contents after the
++text ``List-ID: ''. 
++
++Next,
++.B ezmlm-send
++prints all the new fields listed in
++.IR dir\fB/headeradd .
++Any tags, ``<#h#>'', ``<#l#>'', or ``<#n#>'' found in these headers
++are replaced by the list host name, list local name, and message number,
++respectively.
++
+ .B ezmlm-send
+-then prints all the new fields listed in
+-.IR dir\fB/headeradd ,
+-followed by an appropriate
++then prints an appropriate
+ .B Delivered-To
+ line.
+ 
++If it is present,
++.B ezmlm-send
++deletes any incoming fields with names listed in
++.IR dir\fB/headerkeep .
++If not,
+ .B ezmlm-send
+ deletes any incoming fields with names listed in
+ .IR dir\fB/headerremove .
+ 
++If present,
++.B ezmlm-send
++removes all MIME parts not specified in
++.IR dir\fB/mimekeep .
++Otherwise
++.B ezmlm-send
++removes MIME parts specified in
++.I dir\fB/mimeremove
++before archiving and distribution of the message.
++
++If
++.I dir\fB/text/trailer
++exists,
++.B ezmlm-send
++adds the trailer to simple text/plain messages in the same encoding as used for
++the the message. However, if the encoding is ``base64'' it is not safe
++to do this and the header is suppressed.
++For composite MIME messages, the trailer is added as a separate
++part, with the character set and encoding specified in
++.IR dir\fB/charset .
++The trailer is not added to multipart/alternative messages.
++Any tags, ``<#h#>'', ``<#l#>'', or ``<#n#>'' found in
++.I dir\fB/text/trailer
++are replaced by the list host name, list local name, and message number,
++respectively.
++
++If
++.I dir\fB/prefix
++exists,
++.B ezmlm-send
++will prefix the subject line with the first line of this
++file. A space will be added to separate
++.B prefix
++from the subject text.
++.B prefix
++is ignored for sublists. If
++.I dir\fB/prefix
++contains a ``#'', the last ``#'' will be replaced by the message number.
++Any prefix starting with text of a
++reply indicator (``Re:'', ``Re[n]:'', etc) will cause problems.
++The prefix may be
++rfc2047 encoded. Rfc2047 Iso-2022-* encoded prefixes
++.I must
++end in ascii.
++
++The prefix feature and especially the message number feature
++modify the message in violation
++with Internet mail standards. The features have been implemented by popular
++demand. Use at your own peril.
++
++.I dir\fB/sequence
++is ignored as of ezmlm-idx-0.32. Use
++.I dir\fB/headeradd
++with substitution to achieve the same goal.
++
++If
++.I dir\fB/qmqpservers
++exists,
++.B ezmlm-send will use
++.B qmail-qmqp(1)
++to send messages.
++
+ .B ezmlm-send
+ does not distribute bounce messages:
+ if the environment variable
+@@ -46,6 +158,60 @@
+ .BR #@[] ,
+ .B ezmlm-send
+ rejects the message.
++.SH OPTIONS
++.TP
++.B \-c
++No longer supported. Ignored for backwards compatibility.
++.TP
++.B \-C
++No longer supported. Ignored for backwards compatibility.
++.B ezmlm-send
++has to parse the subscriber database.
++.TP
++.B \-h\fI header
++If the list is a sublist, i.e.
++.I dir\fB/sublist
++exists,
++.I header
++is required in all messages to the list. This option is used
++when ezmlm is used to run a sublist of a lists run by a different
++mailing list
++manager that uses
++.I header
++rather than ``Mailing-List'' to identify messages from the list.
++Anything after the first colon (if present) in
++.I header
++is ignored.
++.TP
++.B \-r
++Copy incoming ``Received:'' headers to the outgoing message.
++.TP
++.B \-R
++(Default.)
++Do not copy incoming ``Received:'' headers, except the one added by
++the (last) listhost, to the outgoing message.
++In some
++cases, especially for sublists,
++the messages can have a large number of ``Received:''
++headers. This may lead to bounces for some users due to
++sendmail ``hopcounts'' set too low somewhere in the mail path. These users can
++subscribe and receive warning and probe messages, but no list messages, unless
++the number of ``Received:'' headers is reduced.
++
++Pre-list ``Received:'' headers are of little interest to normal list
++subscribers. ``Received:'' headers are
++still copied to the archive and available
++to anyone from there for message tracking purposes.
++.TP
++.B \-v
++Display
++.B ezmlm-send
++version information.
++.TP
++.B \-V
++Display
++.B ezmlm-send
++version information.
+ .SH "SUBLISTS"
+ If
+ .I dir\fB/sublist
+@@ -77,10 +243,80 @@
+ does not add its own
+ .B Mailing-List
+ field.
++
++Fourth,
++.B ezmlm-send
++uses the incoming message number for the outgoing message, if the list
++is not archived and the incoming SENDER has the correct format.
++This allows you to refer bounce warning recipients to the main list for
++archive retrieval of the missed messages. If the sublist archives
++message, it is assumed that missed messages will be retrieved from the sublist
++archive.
++
++The list
++still increments
++.I dir\fB/num
++for each message. If the sublist is archived, use of incoming message number
++for archive storage would be a security risk. In this case, the local sublist
++message number is used.
++.SH "OPTION USAGE"
++In general, the use of a prefix is discouraged. It wastes subject line space,
++creates trouble when MUAs add non-standard reply indicators. However, many
++users expect it not because it is useful, but because they are used to it.
++
++The
++.B \-C
++switch prevents posts from being set to SENDER. Rather than just copying
++out subscriber address files,
++.B ezmlm-send
++has to parse them to look for SENDER. This makes it less efficient. Also,
++it is useful for the SENDER to see the post to know that it has made it
++to the list, and it's context to other subscribers, i.e. where it came
++within the traffic of messages on the list.
++
++Avoiding SENDER as a recipient is useful in small lists, such as small
++teams with varying members, where ezmlm serves mainly as an efficient tool
++to keep the team connected without administrator intervention. Here the
++overhead of subscriber list parsing is negligible.
++.SH "CHARACTER SETS"
++If the list is indexed,
++.B ezmlm-send
++will keep a message index. rfc2047-encoded subject and from lines will be
++decoded.
++If
++.I dir\fB/charset
++exists,
++.B ezmlm-send
++will eliminate redundant escape sequences from the headers according to
++the character set specified in this file.
++Only character sets using escape sequences need this support. Currently,
++supported are iso-2022-jp*, iso-2022-kr, and iso-2022-cn*. Only iso-2022-jp
++has been tested extensively.
++
++The character set can be suffixed
++by ``:'' followed by a code. Recognized codes are ``Q'' 
++for ``Quoted-Printable'', and ``B'' for ``base64''.
++
++For
++.BR ezmlm-send ,
++this affects the format of the trailer, if a trailer is specified and if the
++message is a multipart mime message
++.SH BUGS
++Since the MIME parser doesn't decode inner MIME layers of a 
++.I "multipart/*"
++message,
++.IR mimekeep ,
++.IR mimeremove ,
++and
++.I mimereject
++will be applied to the outer MIME layer only.
+ .SH "SEE ALSO"
++ezmlm-get(1),
++ezmlm-idx(1),
+ ezmlm-manage(1),
+ ezmlm-make(1),
+ ezmlm-sub(1),
+ ezmlm-unsub(1),
+ ezmlm-reject(1),
+-ezmlm(5)
++ezmlm(5),
++qmail-qmqp(1)
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/ezmlm-sub.1 ./ezmlm-sub.1
+--- ezmlm-sub.1	1997-06-29 21:11:54.000000000 -0600
++++ ezmlm-sub.1	2007-10-05 11:25:27.000000000 -0600
+@@ -1,24 +1,46 @@
++.\" $Id$
+ .TH ezmlm-sub 1
+ .SH NAME
+ ezmlm-sub \- manually add addresses to a mailing list
+ .SH SYNOPSIS
+ .B ezmlm-sub
++[
++.B \-HmMnNvV
++][
++.B \-h
++.I hash
++]
+ .I dir
+ [
+-.I box\fB@\fIdomain ...
++.I subdir
++]
++[
++.I box\fB@\fIdomain 
++[
++.I name
++]
++.I ...
+ ]
+ .SH DESCRIPTION
+ .B ezmlm-sub
+ adds each address
+ .I box\fB@\fIdomain
+ to the mailing list stored in
+-.IR dir .
++.IR dir / subdir .
++.I name
++is added as a comment to the subscription log, if the
++.B \-n
++switch is used.
++
++If no argument is given on the command line,
++.B ezmlm-sub
++will process standard input instead.
+ 
+ If
+ .I box\fB@\fIdomain
+ is already on the mailing list,
+ .B ezmlm-sub
+-leaves it there.
++leaves it there and does not modify the subscription log.
+ 
+ .B ezmlm-sub
+ converts
+@@ -28,11 +50,65 @@
+ to the mailing list.
+ 
+ .I box\fB@\fIdomain
+-cannot be longer than 400 characters.
++cannot be longer than 400 characters (255 characters with mysql support).
++.SH "GENERAL OPTIONS"
++.TP
++.B \-n
++Assume arguments are pairs of
++.I box\fB@\fIdomain
++and
++.IR name
++(or other subscriber info)
++rather than addresses alone.
++.B ezmlm-sub(1)
++will add the first argument in each pair to the subscriber list. If it is
++a new address,
++.I name
++will be added to the subscription log.
++.TP
++.B \-N
++(Default.)
++Arguments are all addresses of the type
++.IR box\fB@\fIdomain .
++.TP
++.B \-v
++Display
++.B ezmlm-sub(1)
++version information.
++.TP
++.B \-V
++Display
++.B ezmlm-sub(1)
++version information.
++.SH "SQL OPTIONS"
++These option is silently ignored in the absence of mysql support.
++.TP
++.B \-h \fIhash
++With mysql support the argument is used as the hash. The argument should
++be between 1 and 99. The hash is used in
++in the distribution of addresses between sublists. As the hash is normally
++between 0 and 52, controlling the hash makes it possible to add addresses
++that cannot be manipulated remotely.
++.TP
++.B \-H
++(Default.)
++The address can be removed if it has a hash in the normal range (0..52).
++.TP
++.B \-m
++(Default.)
++Use SQL support if available.
++.TP
++.B \-M
++Do not use SQL support even if available.  This option can be used to
++build a normal local subscriber database even for lists with SQL
++support. Use in combination with
++.B ezmlm-list(1)
++to convert an SQL address db to a ezmlm standard address database.
+ .SH "SEE ALSO"
+ ezmlm-list(1),
+ ezmlm-manage(1),
+ ezmlm-make(1),
++ezmlm-receipt(1),
+ ezmlm-send(1),
+ ezmlm-unsub(1),
+ ezmlm(5)
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/ezmlm-unsub.1 ./ezmlm-unsub.1
+--- ezmlm-unsub.1	1997-06-29 21:11:54.000000000 -0600
++++ ezmlm-unsub.1	2007-10-05 11:25:27.000000000 -0600
+@@ -1,18 +1,40 @@
++.\" $Id$
+ .TH ezmlm-unsub 1
+ .SH NAME
+ ezmlm-unsub \- manually remove addresses from a mailing list
+ .SH SYNOPSIS
+ .B ezmlm-unsub
++[
++.B \-HmMnNvV
++] [
++.B \-h
++.I hash
++]
+ .I dir
+ [
+-.I box\fB@\fIdomain ...
++.I subdir
++]
++[
++.I box\fB@\fIdomain
++[
++.I name
++]
++.I ...
+ ]
+ .SH DESCRIPTION
+ .B ezmlm-unsub
+ removes each address
+ .I box\fB@\fIdomain
+ from the mailing list stored in
+-.IR dir .
++.IR dir / subdir .
++.I name
++is added as a comment to the subscription log, if the
++.B \-n
++switch is used.
++
++If no argument is given on the command line,
++.B ezmlm-unsub
++will process standard input instead.
+ 
+ If
+ .I box\fB@\fIdomain
+@@ -26,10 +48,65 @@
+ to lowercase before removing
+ .I box\fB@\fIdomain
+ from the mailing list.
++
++.SH "GENERAL OPTIONS"
++.TP
++.B \-n
++Assume arguments are pairs of
++.I box\fB@\fIdomain
++and
++.IR name
++(or other subscriber info)
++rather than addresses alone.
++.B ezmlm-unsub(1)
++will remove the first argument in each pair from the subscriber list. If
++it is a new address,
++.I name
++will be added to the subscription log.
++.TP
++.B \-N
++(Default.)
++Arguments are all addresses of the type
++.IR box\fB@\fIdomain .
++.TP
++.B \-v
++Display
++.B ezmlm-unsub(1)
++version information.
++.TP
++.B \-V
++Display
++.B ezmlm-unsub(1)
++version information.
++.SH "SQL OPTIONS"
++These option is silently ignored in the absence of mysql support.
++.TP
++.B \-h \fIhash
++With mysql support the argument is used as the hash. The argument should
++be between 1 and 99. The hash is used in
++in the distribution of addresses between sublists. As the hash is normally
++between 0 and 52, controlling the hash makes it possible to remove addresses
++that cannot be manipulated remotely. A hash of 99 is reserved for sublists,
++and a hash of 98 is reserved for ``receipt'' addresses serviced by
++.B ezmlm-receipt(1).
++.TP
++.B \-H
++(Default.)
++The address can be removed if it has a hash in the normal range (0..52).
++.TP
++.B \-m
++(Default.)
++Use SQL support if available.
++.TP
++.B \-M
++Do not use SQL support even if available.  This option can be used to
++manipulate a normal local subscriber database even for lists with SQL
++support.
+ .SH "SEE ALSO"
+ ezmlm-list(1),
+ ezmlm-manage(1),
+ ezmlm-make(1),
++ezmlm-receipt(1),
+ ezmlm-send(1),
+ ezmlm-sub(1),
+ ezmlm(5)
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/ezmlm-warn.1 ./ezmlm-warn.1
+--- ezmlm-warn.1	1997-06-29 21:11:54.000000000 -0600
++++ ezmlm-warn.1	2007-10-02 10:11:52.000000000 -0600
+@@ -1,8 +1,18 @@
++.\" $Id$
+ .TH ezmlm-warn 1
+ .SH NAME
+ ezmlm-warn \- send out bounce warnings
+ .SH SYNOPSIS
+ .B ezmlm-warn
++[
++.B \-dD
++][
++.B \-t
++.I timeout
++][
++.B \-l
++.I lockout
++]
+ .I dir
+ .SH DESCRIPTION
+ .B ezmlm-warn
+@@ -12,27 +22,99 @@
+ 
+ .B ezmlm-warn
+ scans
+-.I dir\fB/bounce
+-for bounce messages received by
+-.BR ezmlm-return .
+-If it sees a distribution bounce for
++.I dir\fB/bounce/d/
++for directories older than
++.I timeout
++days ago (see
++.BR \-t ).
++The directories are created by
++B ezmlm-return
++and contain bounces.
++If
++.B ezmlm-warn
++sees a distribution bounce for
+ .I box\fB@\fIdomain
+-received more than ten days ago,
++received more than
++.I timeout
++days ago,
+ it sends
+ .I box\fB@\fIdomain
+ a list of all the message numbers missed recently,
+ and deletes the bounce.
+ If it sees a warning bounce for
+ .I box\fB@\fIdomain
+-received more than ten days ago,
++received more than
++.I timeout
++days ago,
+ it sends
+ .I box\fB@\fIdomain
+ a probe,
+ and deletes the bounce.
+ 
+ .B ezmlm-warn
++uses
++.I dir\fB/bounce/lastd
++to keep track of when it was last run. If insufficient time has
++passed (see
++.BR \-l )
++.B ezmlm-warn
++exits without further action.
++
++.B ezmlm-warn
++keeps files with the bounced message numbers in
++.IR dir\fB/bounce/h .
++Expired files are removed and
++.I dir\fB/bounce/lasth
++keeps track of the last subdirectory scanned.
++
++.B ezmlm-warn
+ will not send a warning or probe to an address that is
+ not currently a subscriber.
++
++.B ezmlm-warn
++reads
++.I dir\fB/copylines
++to determine how many lines of the original message to copy into the
++outgoing message.  If this file is empty or not present, a value of
++.I 0
++is presumed, meaning that only the header is copied.
++.SH OPTIONS
++.TP
++.B \-d
++process bounces for the digest list, rather than for the main list.
++Digest list bounces are stored in
++.I dir\fB/digest/bounce/
++rather than in
++.IR dir\fB/bounce/ .
++.TP
++.B \-D
++(Default.)
++Process bounces for the main list.
++.TP
++.B \-l \fIlockout
++.B ezmlm-warn
++will abort execution if it was run less than
++.I lockout
++seconds ago. The default is
++.I timeout /
++50, which with the default
++.I timeout
++is 20,000 seconds (approx. 5.6 hours). There is no reason to use this
++switch, except for testing and possibly in combination with
++.BR \-t.
++.TP
++.B \-t \fItimeout
++Bounces received more than
++.I timeout
++days ago are processed. This overrides the default of 1,000,000
++seconds (approximately 10 days)
++and may possibly be useful for very large busy lists. Also, a
++.I timeout
++of zero can be used to send a warning to all addresses for which
++a bounce has been received and a probe for all addresses for which a
++warning has bounces.
++This is useful to rapidly clear
++out bouncing addresses from a (low quality) address list.
+ .SH "SEE ALSO"
+ ezmlm-make(1),
+ ezmlm-return(1),
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/ezmlm-weed.1 ./ezmlm-weed.1
+--- ezmlm-weed.1	1997-06-29 21:11:54.000000000 -0600
++++ ezmlm-weed.1	2007-10-01 23:16:30.000000000 -0600
+@@ -1,3 +1,4 @@
++.\" $Id$
+ .TH ezmlm-weed 1
+ .SH NAME
+ ezmlm-weed \- weed out useless messages
+@@ -7,6 +8,8 @@
+ .B ezmlm-weed
+ reads a mail message from its standard input.
+ If it recognizes the message as an MTA warning message or success message,
++or as a message with precedence ``bulk'' or ``junk'' as generated by
++vacation autoresponders,
+ it exits 99;
+ this will cause
+ .B qmail-alias
+@@ -33,25 +36,20 @@
+    Subject: deferral notice
+ .EE
+ 
+-Warning message from sendmail, MIME form:
++Delivery-status notification (DSN, rfc1891). All DSN messages with ``Action''
++other than ``failed'':
+ 
+ .EX
+-   From: Mail Delivery Subsystem
++   Content-type: multipart/report
+ .EE
+-.br
++
++Warning message from sendmail, MIME form:
++
+ .EX
++   From: Mail Delivery Subsystem
+    Subject: Warning
+-.EE
+-.br
+-.EX
+    Auto-Submitted: auto-generated (warning-timeout)
+-.EE
+-.br
+-.EX
+    This is a MIME-encapsulated message
+-.EE
+-.br
+-.EX
+    THIS IS A WARNING MESSAGE ONLY
+ .EE
+ 
+@@ -59,17 +57,8 @@
+ 
+ .EX
+    From: Mail Delivery Subsystem
+-.EE
+-.br
+-.EX
+    Subject: Warning
+-.EE
+-.br
+-.EX
+    Auto-Submitted: auto-generated (warning-timeout)
+-.EE
+-.br
+-.EX
+    THIS IS A WARNING MESSAGE ONLY
+ .EE
+ 
+@@ -77,17 +66,8 @@
+ 
+ .EX
+    From: Mail Delivery Subsystem
+-.EE
+-.br
+-.EX
+    Subject: Returned mail: warning
+-.EE
+-.br
+-.EX
+    This is a MIME-encapsulated message
+-.EE
+-.br
+-.EX
+    THIS IS A WARNING MESSAGE ONLY
+ .EE
+ 
+@@ -95,15 +75,47 @@
+ 
+ .EX
+    From: Mail Delivery Subsystem
++   Subject: Returned mail: warning
++   THIS IS A WARNING MESSAGE ONLY
++.EE
++
++Notification messages from Novell Groupwise:
++
++.EX
++  Subject: Message status - delivered
++  Subject: Message status - opened
++  Subject: Out of Office AutoReply:
+ .EE
+-.br
++
++Various autoresponders:
++
+ .EX
+-   Subject: Returned mail: warning
++  Precedence: bulk
++  Precedence: junk
++  Auto-Submitted: auto-replied
++  Thread-Topic: AutoResponse
++  Subject: AutoResponse -
++  X-Amazon-Auto-Reply:
++  X-Mailer: KANA Response
++  Thread-Topic: AutoResponse
++  Auto-Submitted:
+ .EE
+-.br
++
++Mailing list indicators:
++
+ .EX
+-   THIS IS A WARNING MESSAGE ONLY
++  Precedence: list
++  Mailing-List:
++  List-ID:
++  X-Mailing-List:
++  X-ML-Name:
++  List-Help:
++  List-Unsubscribe:
++  List-Post:
++  List-Owner:
++  List-Archive;
+ .EE
++
+ .SH "SEE ALSO"
+ ezmlm-return(1),
+ qmail-command(8)
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/ezmlm-weed.c ./ezmlm-weed.c
+--- ezmlm-weed.c	1997-06-29 21:11:54.000000000 -0600
++++ ezmlm-weed.c	2007-10-05 11:25:27.000000000 -0600
+@@ -1,22 +1,25 @@
++/*$Id$*/
++
++#include <unistd.h>
+ #include "stralloc.h"
+ #include "str.h"
+ #include "byte.h"
++#include "case.h"
+ #include "readwrite.h"
+ #include "substdio.h"
++#include "subfd.h"
+ #include "getln.h"
+ #include "strerr.h"
++#include "errtxt.h"
++#include "die.h"
+ 
+-char buf0[256];
+-substdio ss0 = SUBSTDIO_FDBUF(read,0,buf0,sizeof(buf0));
+-
+-#define FATAL "ezmlm-weed: fatal: "
++const char FATAL[] = "ezmlm-weed: fatal: ";
+ 
+-void get(sa)
+-stralloc *sa;
++void get(stralloc *sa)
+ {
+   int match;
+-  if (getln(&ss0,sa,&match,'\n') == -1)
+-    strerr_die2sys(111,FATAL,"unable to read input: ");
++  if (getln(subfdin,sa,&match,'\n') == -1)
++    strerr_die2sys(111,FATAL,ERR_READ_INPUT);
+   if (!match) _exit(0);
+ }
+ 
+@@ -30,6 +33,9 @@
+ stralloc line7 = {0};
+ stralloc line8 = {0};
+ 
++stralloc boundary = {0};
++stralloc dsnline = {0};
++
+ char warn1[] = "    **********************************************";
+ char warn2[] = "    **      THIS IS A WARNING MESSAGE ONLY      **";
+ char warn3[] = "    **  YOU DO NOT NEED TO RESEND YOUR MESSAGE  **";
+@@ -40,20 +46,81 @@
+ int flagsr = 0;
+ int flagas = 0;
+ int flagbw = 0;
++int flagdsn = 0;
+ 
+-void main()
++int isboundary(void)
++/* returns 1 if line.len contains the mime bondary, 0 otherwise */
+ {
+-  int match;
++    if (line.s[0] == '-' && line.s[1] == '-' && line.len >= boundary.len + 3)
++      if (!byte_diff(line.s + 2,boundary.len,boundary.s))	/* boundary */
++        return 1;
++    return 0;
++}
++
++void main(void)
++{
++  unsigned int i,j;
+ 
+   for (;;) {
+     get(&line);
+     if (line.len == 1) break;
+-
++    if (line.s[0] == ' ' || line.s[0] == '\t') {	/* continuation */
++      if (flagdsn) {
++	if (!stralloc_catb(&dsnline,line.s,line.len - 1)) die_nomem();
++	continue;
++      }
++    }
++    flagdsn = 0;
+     if (stralloc_starts(&line,"Subject: success notice"))
+       _exit(99);
+     if (stralloc_starts(&line,"Subject: deferral notice"))
+       _exit(99);
+-
++    if (stralloc_starts(&line,"Precedence: bulk"))
++      _exit(99);
++    if (stralloc_starts(&line,"Precedence: junk"))
++      _exit(99);
++    if (stralloc_starts(&line,"Auto-Submitted:"))
++      _exit(99);
++    /* Mailing list signatures */
++    if (stralloc_starts(&line,"Precedence: list"))
++      _exit(99);
++    if (stralloc_starts(&line,"Mailing-List:"))
++      _exit(99);
++    if (stralloc_starts(&line,"List-ID:"))
++      _exit(99);
++    if (stralloc_starts(&line,"X-Mailing-List:"))
++      _exit(99);
++    if (stralloc_starts(&line,"X-ML-Name:"))
++      _exit(99);
++    if (stralloc_starts(&line,"List-Help:"))
++      _exit(99);
++    if (stralloc_starts(&line,"List-Unsubscribe:"))
++      _exit(99);
++    if (stralloc_starts(&line,"List-Subscribe:"))
++      _exit(99);
++    if (stralloc_starts(&line,"List-Post:"))
++      _exit(99);
++    if (stralloc_starts(&line,"List-Owner:"))
++      _exit(99);
++    if (stralloc_starts(&line,"List-Archive:"))
++      _exit(99);
++/* for Novell Groupwise */
++    if (stralloc_starts(&line,"Subject: Message status - delivered"))
++      _exit(99);
++    if (stralloc_starts(&line,"Subject: Message status - opened"))
++      _exit(99);
++    if (stralloc_starts(&line,"Subject: Out of Office AutoReply:"))
++      _exit(99);
++    /* Other autoresponders */
++    if (stralloc_starts(&line,"X-Amazon-Auto-Reply:"))
++      _exit(99);
++    if (stralloc_starts(&line,"X-Mailer: KANA Response"))
++      _exit(99);
++    if (stralloc_starts(&line,"Thread-Topic: AutoResponse"))
++      _exit(99);
++    if (stralloc_starts(&line,"Subject: AutoResponse -"))
++      _exit(99);
++    
+     if (stralloc_starts(&line,"From: Mail Delivery Subsystem <MAILER-DAEMON@"))
+       flagmds = 1;
+     if (stralloc_starts(&line,"Subject: Warning: could not send message"))
+@@ -62,6 +129,71 @@
+       flagsr = 1;
+     if (stralloc_starts(&line,"Auto-Submitted: auto-generated (warning"))
+       flagas = 1;
++    if (case_startb(line.s,line.len,"Content-type: multipart/report"))
++      if (!stralloc_copyb(&dsnline,line.s,line.len - 1)) die_nomem();
++      flagdsn = 1;
++  }			/* end of header */
++
++  if (flagdsn) {	/* always only one recipient/action */
++    flagdsn = 0;	/* will be set for correct report type */
++    for (i=0; i < dsnline.len; i += 1+byte_chr(dsnline.s+i,dsnline.len-i,';')) {
++      while (dsnline.s[i] == ' ' || dsnline.s[i] == '\t')
++	if (++i >= dsnline.len) break;
++      if (case_startb(dsnline.s + i,dsnline.len - i,"report-type=")) {
++	i += 12;
++	while (dsnline.s[i] ==' ' || dsnline.s[i] =='\t' || dsnline.s[i] =='"')
++	  if (++i >= dsnline.len) break;
++	if (case_startb(dsnline.s + i,dsnline.len - i,"delivery-status"))
++	  flagdsn = 1;
++      } else if (case_startb(dsnline.s + i,dsnline.len - i,"boundary=")) {
++	i += 9;
++	while (dsnline.s[i] ==' ' || dsnline.s[i] =='\t')
++	  if (++i >= dsnline.len) break;
++	if (dsnline.s[i] == '"') {
++	  if (++i >= dsnline.len) break;
++	  j = i + byte_chr(dsnline.s + i,dsnline.len - i,'"');
++	  if (j >= dsnline.len) break;
++	} else {
++	  j = i;
++	  while (dsnline.s[j] !=' ' && dsnline.s[j] !='\t' &&
++		dsnline.s[j] !=';')
++	    if (++j >= dsnline.len) break;
++	}				/* got boundary */
++	if (!stralloc_copyb(&boundary,dsnline.s+i,j-i)) die_nomem();
++      }
++    }
++  }
++  if (flagdsn && boundary.len) {	/* parse DSN message */
++    get(&line);			/* if bad format we exit(0) via get() */
++    for (;;) {
++      if (isboundary()) {
++      if (line.len == boundary.len + 5 && line.s[line.len - 1] == '-'
++		&& line.s[line.len - 2] == '-')
++        _exit(99);			/* end: not failure report */
++        get(&line);			/* Content-type */
++        if (case_startb(line.s,line.len,"content-type:")) {
++	  i = 13;
++	  while (line.s[i] == ' ' || line.s[i] == '\t')
++		if (++i >= line.len) break;
++	  if (case_startb(line.s+i,line.len-i,"message/delivery-status")) {
++	    for (;;) {
++	      get(&line);
++	      if (isboundary()) break;
++	      if (case_startb(line.s,line.len,"action:")) {
++	        i = 8;
++	        while (line.s[i] == ' ' || line.s[i] == '\t')
++		  if (++i >= line.len) break;
++	        if (case_startb(line.s + i, line.len - i,"failed"))
++		  _exit(0);	/* failure notice */
++		else
++		  _exit(99);	/* there shouldn't be more than 1 action */
++	      }
++            }
++	  }
++        }
++      } else
++	get(&line);
++    }
+   }
+ 
+   get(&line1);
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/ezmlm.5 ./ezmlm.5
+--- ezmlm.5	1997-06-29 21:11:54.000000000 -0600
++++ ezmlm.5	2007-10-01 15:44:17.000000000 -0600
+@@ -1,3 +1,4 @@
++.\" $Id$
+ .TH ezmlm 5
+ .SH NAME
+ ezmlm \- format of ezmlm directory
+@@ -21,7 +22,60 @@
+ handles administrative requests automatically;
+ .B ezmlm-send
+ sends a message to all subscribers listed in
+-.IR dir .
++.I dir
++and also maintains a message archive and message subject index if the list
++is configured to do so.
++.B ezmlm-reject
++rejects messages that have an empty subject, or a subject consisting of
++only a command word;
++.B ezmlm-return
++handles bounces;
++.B ezmlm-warn
++warns users for which messages bounce and eventually removes them from
++the subscriber list.
++.B ezmlm-idx
++can create a subject index from an existing list archive.
++.B ezmlm-get
++manages message, index, and thread retrieval from the archive, as well
++as the generation of message digests;
++.B ezmlm-cron
++provides a restricted interface to cron for the generation of
++digest generation trigger messages;
++.B ezmlm-store
++queues messages of moderated lists and sends a moderation request to
++the moderator(s);
++.B ezmlm-moderate
++processes moderation requests to accept the queued message to the list
++via
++.B ezmlm-send,
++or to return the message to the sender;
++.B ezmlm-clean
++cleans up the moderation queue and returns to the sender
++any messages that have timed-out;
++.B ezmlm-gate
++posts messages that come from a SENDER in an address database, and sends
++remaining messages out for moderation;
++.B ezmlm-check
++is used to diagnose problems with ezmlm mailing list configuration;
++.B ezmlm-issub
++and
++.B ezmlm-issubn
++determine if a SENDER is a subscriber or a member of a
++collection of addresses;
++.B ezmlm-tstdig
++determines if it is time to create a new digest based on the number and
++volume of messages and the amount of time that has passed since the last
++digest was issued;
++.B ezmlm-request
++can be used to answer
++.B ezmlm
++commands in the subject line easing migration from other mailing list
++managers. It can also function as a global interface mimicking
++the interface of other mailing list manager.
++.B ezmlm-glmake
++can set up the global interface, and
++.B ezmlm-glconf
++can create a configuration file for the global interface from your lists.
+ .SH SUBSCRIBERS
+ .I dir\fB/subscribers
+ is a directory containing the subscriber list.
+@@ -69,12 +123,19 @@
+ .B ezmlm-send
+ archives all new messages if
+ .I dir\fB/archived
+-exists.
++exists. If
++.I dir\fB/indexed
++exists,
++.B ezmlm-send
++also maintains a message subject and author index.
+ 
+ Messages sent to the mailing list are numbered from 1 upwards,
+ whether or not they are archived.
+ .I dir\fB/num
+-is the number of messages sent so far.
++is the number of messages sent so far followed by ':', followed by the
++cumulative amount of message body that has passed
++.B ezmlm-send
++stored as kbytes * 4 (4 corresponds to 1kb).
+ 
+ .I dir\fB/archive
+ has subdirectories,
+@@ -83,11 +144,43 @@
+ .IR dir\fB/archive/\fIm\fB/\fIn .
+ For example, message number 15307 is stored in
+ .IR dir\fB/archive/153/07 .
++The message index is stored in the file
++.B index
++in the same subdirectory of
++.I dir\fB/archive
++holding the corresponding messages.
++Thus, the subject index contains up to 100 entries.
++
++The subject index contains message subjects that are normalized so that
++the original message and all replies have the same entry. The subject index
++is used for advanced message retrieval functions. For safety, the subject
++index is created under a temporary name
++inside
++.I dir\fB/archive
++and then moved into place.
+ 
+ .B ezmlm-manage
+ will ignore message files without the owner-execute bit set.
+ .B ezmlm-send
+ turns on the owner-execute bit after safely writing the message to disk.
++
++.B ezmlm-make
++by default adds
++.B ezmlm-get
++to
++.I dir\fB/manager
++to handle 
++.I \-get, \-index,
++and
++.I \-thread
++requests. If
++.B ezmlm-make
++is invoked with a 
++.I digcode
++command line argument, digest creation
++is enabled by putting this argument on the
++.B ezmlm-get
++command line.
+ .SH BOUNCES
+ .I dir\fB/bounce
+ is a directory containing bounce messages.
+@@ -127,9 +220,10 @@
+ sets up
+ .I dir\fB/bouncer
+ to invoke
+-.B ezmlm-return
+-and then
+-.BR ezmlm-warn .
++.BR ezmlm-return .
++.B ezmlm-warn
++is no longer invoked here due to the load it places on systems with many
++large lists with many bounces.
+ 
+ .I dir\fB/manager
+ handles incoming administrative requests.
+@@ -137,9 +231,266 @@
+ sets up
+ .I dir\fB/manager
+ to invoke
+-.B ezmlm-manage
++.BR ezmlm-get ,
++.BR ezmlm-manage ,
+ and then
+ .BR ezmlm-warn .
++
++.I dir\fB/moderator
++handles incoming message
++.I accept
++and
++.I reject
++requests for moderated lists.
++.B ezmlm-make
++sets up
++.I dir\fB/moderator
++to invoke
++.BR ezmlm-moderate ,
++and .BR ezmlm-clean .
++.SH DIGESTS
++.B ezmlm-get
++can create digests if it is invoked from the command line, from
++.IR dir\fB/editor ,
++or from
++.IR dir\fB/manager .
++The program functions in slightly different ways in these 3 settings (see
++.BR ezmlm-get(1) ).
++
++To enable automatic digests for a mailing list, use the
++.B ezmlm-make \-d
++switch. To also enable the generation of digests at specific times dictated
++by mailed trigger messages, a
++.I digcode
++should be specified on the
++.B ezmlm-get
++command line.
++This can be done by specifying
++.I digcode
++as a fifth argument to
++.B ezmlm-make
++when setting up the list.
++.I digcode
++must be alphanumeric and is case-insensitive.
++
++To generate trigger messages, use
++.B ezmlm-cron(1)
++as an interface to
++.B crond(8)
++or use
++.B crond
++directly.
++
++.I dir\fB/num
++contains the number of the last message processed, followed by ':' and a
++number that is increased by 1 for each 256 bytes of message body text
++processed. The latter number is used by
++.B ezmlm-tstdig
++to determine if a new digest is due.
++
++.I dir\fB/dignum
++contains the contents of
++.I dir\fB/num
++at the time of the last regular digest creation, followed by a ':',
++followed by a timestamp.
++It is updated after each regular digest is sent.
++
++.I dir\fB/digissue
++contains the issue number of the last regular digest. It is incremented
++for each regular digest sent.
++
++The following user crontab entry (all on one line)
++generates a digest of the list
++.I list@host.domain
++at 1600 every day:
++
++.EX
++  00 16 * * * /var/qmail/bin/qmail-inject list-dig.digcode
++.EE
++
++Alternatively,
++.B ezmlm-cron
++can be used:
++
++.EX
++  % ezmlm-cron -t 16:00 list@host digcode
++.EE
++
++.B ezmlm-get
++can also be run from the shell: To generate a digest to
++.I list-digest@host
++from the list housed in
++.IR ~joe/list :
++
++.EX
++  % ezmlm-get ~joe/list
++.EE
++
++Like other
++.B ezmlm-get
++replies, digest can be sent in several formats. See
++.B ezmlm-get(1)
++for more info.
++.SH MODERATION
++There are three aspects of moderation: moderation of posts, moderation
++of subscriptions, and "remote administration", i.e. giving the
++moderator the right to (un)subscribe any user.
++.B ezmlm
++handles these three aspects separately. The two first aspects enhance
++security, while the third decreases security, but makes list administration
++considerably easier. By default, the moderator database is the same for all
++three functions. While "remote administration" and subscription moderation
++always use the same database, the moderators for message moderation can
++be different.
++
++Even with subscription moderation, the user has to verify the request. This
++is to ensure that the user initiating the request really controls the address.
++.B ezmlm-manage
++options exist to disable the user handshake, which may be useful in some
++circumstances.
++
++For moderation options, the moderators are by stored in a subscriber
++list in
++.IR moddir\fB/subscribers .
++By default
++.I moddir
++is
++.IR dir\fB/mod .
++
++Moderators can be added and removed with:
++
++.EX
++.B ezmlm-sub
++.I moddir
++.I moderator@host
++.EE
++
++.EX
++.B ezmlm-unsub
++.I moddir
++.I moderator@host
++.EE
++
++For subscription moderation, touch
++.IR dir\fB/modsub
++after adding moderator(s).
++For remote administration, touch
++.IR dir\fB/remote .
++If the contents of these files start with a leading forward slash, it is 
++assumed to be the name of
++.B moddir
++subscription
++moderation. If both files exist and start with a forward slash, the
++.I dir\fB/remote
++contents are ignored. Moderators are stored in a subscriber list in the
++.B subscribers
++subdirectory of
++.BR moddir .
++If no directory names are specified,
++the default,
++.IR dir\fB/mod ,
++is used.
++In all cases, the
++.I subscribers
++subdirectory of the base directory must exists/be created.
++
++Moderation of messages is achieved by
++creating
++.I dir\fB/modpost
++and  modifying
++.IR dir\fB/editor
++to invoke
++.B ezmlm-store.
++.B ezmlm-store
++stores the message in
++.IR dir\fB/mod/pending
++and sends a moderation request to all moderators stored in
++.IR moddir .
++
++If
++.I dir\fB/modpost
++does not exist,
++.B ezmlm-store
++posts messages directly, and
++.B ezmlm-clean
++does nothing.
++
++If
++.I dir\fB/modpost
++contains a directory name starting with a forward slash,
++this directory is used as
++.I moddir
++for message moderation.
++Moderators are stored in a subscriber list in the
++.I subscribers
++subdirectory of
++.IR moddir .
++If no directory names are specified,
++the default,
++.IR dir\fB/mod ,
++is used.
++
++.IR dir\fB/moderator
++is linked to
++.IR dot\fB\-accept-default
++and
++.IR dot\fB\-reject-default .
++It handles replies from the moderators.
++
++In addition to a moderator list, the directories
++.IR dir\fB/mod/pending ,
++.IR dir\fB/mod/accepted ,
++and
++.IR dir\fB/mod/rejected
++must exist. These directories contain the message moderation queue.
++
++If
++.IR dir\fB/mod/modtime
++it determines the minimal time in hours that messages wait in the moderation
++queue, before they are returned to sender with the message in
++.IR dir\fB/text/mod-timeout .
++
++If a
++.I \-help
++command is send for a moderator and
++.IR dir\fB/modsub
++or
++.IR dir\fB/remote
++exist, a more detailed help message stored in
++.I dir\fB/text/mod-help
++will be sent together with the regular help. This text should not contain
++secrets.
++If
++.I dir\fB/text/mod-help
++does not exist,
++.I dir\fB/text/help
++will be sent.
++
++If a
++.I \-list
++command is sent for a moderator and
++.IR dir\fB/modsub
++or
++.IR dir\fB/remote
++exist, and the
++.B ezmlm-manage \-l
++command line switch is specified, a subscriber list will be returned.
++
++If an
++.I \-edit.file
++command is sent for a moderator and
++.IR dir\fB/remote
++exist, and the
++.B ezmlm-manage \-d
++command line switch is specified,
++.B text\fB/file
++is returned together with an
++.B ezmlm
++cookie. The remote administrator may return an edited version of the
++file, which will be stored, provided that the cookie is valid.
++See
++.B ezmlm-manage(1)
++for more info.
+ .SH TEXT
+ .I dir\fB/text
+ is a directory
+@@ -187,6 +538,27 @@
+ .B get-bad
+ Rejecting a bad archive retrieval request.
+ .TP
++.B digest
++Text copied into the
++.I Administrativia
++section of the digest. Usually, this will contain subscription info
++for the digest, as well as information on how to post to the list.
++.TP
++.B trailer
++If this files exists, it is copied to the end of all messages to the list.
++.TP
++.B faq
++Sent in response to the
++.I faq
++command. Usually contains frequently asked questions and answers specific
++for the mailing list.
++.TP
++.B info
++Sent in response to the
++.I info
++command. Usually contains a descripition, policy, etc, for the list. The
++first line should in itself be a very brief description of the list.
++.TP
+ .B bounce-warn
+ Pointing out that messages have bounced.
+ .TP
+@@ -198,9 +570,96 @@
+ .B ezmlm-return
+ has kept a list of bounced message numbers.
+ .TP
++.B dig-bounce-num
++Explaining that digest messages have bounced. All other text files are used
++for both the main list and the digest list.
++.TP
+ .B bounce-bottom
+ Separating the bounce message.
++.TP
++.B mod-help
++is set to list moderators issuing a
++.I \-help
++command. It contains instructions for moderators, but it is relatively
++trivial for a non-moderator to read it. Don't put secrets here.
++.TP
++.B mod-reject
++is the returned to the sender of a rejected post.
++.TP
++.B mod-timeout
++is returned if the message timed-out without moderator action.
++.TP
++.B mod-sub
++is added to the text confirming subscription and unsubscription
++instead of
++.B bottom
++and the requesting message, for actions that were approved
++by a moderator. Not copying the requesting message
++hides the moderator identity
++from the subscriber.
++.TP
++.B mod-request
++is the text sent to the moderators to request moderator action on
++a posted message.
++.TP
++.B mod-unsub-confirm
++Requesting that the moderator confirm a request to subscribe.
++If this file does not exist,
++.B sub-confirm
++will be used.
++.TP
++.B mod-unsub-confirm
++Requesting that the moderator confirm a request to unsubscribe.
++If this file does not exist,
++.B unsub-confirm
++will be used.
++.TP
++.B edit-do
++Instructions sent to the remote administrator together with a copy
++of a
++.I dir\fB/text
++file and editing instructions.
++.TP
++.B edit-list
++A list of editable files in
++.I dir\fB/text
++with a one-line description send to a remote administrator in response to a
++.I -edit
++command.
++.TP
++.B edit-done
++Sent to the remote administrator after an edited
++.I dir\fB/text
++file has been successfully saved.
+ .PP
++Several tags in the text files are replaced by ezmlm programs.
++All programs replace the tag
++.B <#l#>
++with the name of the list or the list-digest, as appropriate for the request,
++and
++.B <#h#>
++with the hostname for the list.
++.B ezmlm-send
++and
++.B ezmlm-get
++replace
++.B <#n#>
++with the current message number in added headers from
++.I dir\fB/headeradd
++and text files.
++.B ezmlm-get
++does this for digest messages, where the current message is the number of
++the first message in the digest.
++.B ezmlm-manage
++replaces the tag
++.B <#A#>
++anywhere on a line with the subscription address, and
++.B <#R#>
++anywhere on a line
++with the address the subscriber must reply to. Only the first tag on any
++line is processed.
++.PP
++For backwards compatibility,
+ .B ezmlm-manage
+ replaces the line
+ .B !A
+@@ -213,6 +672,23 @@
+ and
+ .B unsub-confirm
+ with the address that the subscriber must reply to.
++.PP
++.B ezmlm-store
++replaces the tag
++.B <#A#>
++anywhere on a line with the address for accepting the message, and
++.B <#R#>
++anywhere on a line
++with the address for rejecting the message.
++Only the first tag on any line is processed.
++.PP
++For backwards compatibility,
++.B ezmlm-store
++also replaces the line
++.B !A
++with the address for accepting the message and the line
++.B !R
++with the address for rejecting the message.
+ .SH "OUTGOING MESSAGE EDITING"
+ .I dir\fB/headerremove
+ is a list of bad header field names,
+@@ -233,10 +709,61 @@
+ is a list of new header fields.
+ .B ezmlm-send
+ adds these fields to every outgoing message.
+-.B ezmlm-make
++.B ezmlm-send
+ sets up
+ .I dir\fB/headeradd
+-with no new fields.
++to add
++.B X-No-Archive: yes
++and
++.BR Precedence: bulk .
++
++If
++.I dir\fB/mimeremove
++exists,
++.B ezmlm-send
++removed parts with the corresponding content-types from composite MIME
++messages. If the
++.B ezmlm-reject
++.I dir
++argument is specified,
++simple MIME messages of these content-types are rejected.
++
++If
++.I dir\fB/mimereject
++exists, and the
++.B ezmlm-reject
++.I dir
++argument is specified,
++simple MIME messages of these content-types, or
++composite MIME messages with any body part of these content-types are rejected.
++
++If
++.I dir\fB/sequence
++exists, the first line is added as a header to all outgoing messages, followed
++by a space and the message number. The message number is useful for archive
++retrievals, since some mail systems do not reveal the return-path to the user.
++.B NOTE:
++Sublists have their own message counter. Adding a sequence header from a
++sublists will give you the sublist message number which is different from
++the main list message number.
++
++.I dir\fB/prefix
++is a subject prefix. If this file exists, its contents are prefixed to the
++subject of the post in the outgoing message. The archived message is not
++processed. Attempts are made to not duplicate an existing prefix in replies.
++Think twice before using this option.
++A prefix takes unnecessary space on the subject line and most mail clients
++can easily filter on other headers, such as 'Mailing-List:'. If
++.I dir\fB/prefix contains a single '#', this will be replaced by the message
++number. The use of this feature is inadvisable and violates internet mail
++standards. However, it is very popular in e.g. Japan. If you must use this
++feature, make sure you are aware that you may be causing problems to users,
++sublists, etc.
++
++.I dir\fB/text/trailer
++is a message trailer. If this file exists, it's contents are copied to the 
++end of outgoing messages. Only lines terminated with new-line are copied.
++No trailer is copied to the archived version of the message.
+ .SH MISCELLANY
+ The first line of
+ .I dir\fB/mailinglist
+@@ -248,6 +775,27 @@
+ .IR dir\fB/mailinglist ,
+ in every outgoing message.
+ 
++If
++.I dir\fB/listid
++exists,
++ezmlm programs create a new
++.B List-ID
++field, showing the contents of the first line of
++.IR dir\fB/listid ,
++in every outgoing message. The list-id should be unique and within name
++space controlled by the owner. It should remain constant even if lists
++move and be of the format
++
++.EX
++List-ID: optional_text <unique_id.domain>
++.EE
++
++This header would result from a
++.I dir\fB/listid
++file containing ``optional_text <unique_id.domain>''. See
++.I http://www.within.com/~chandhok/ietf/listid.shtml
++for more info.
++
+ The first lines of
+ .I dir\fB/outlocal
+ and
+@@ -259,28 +807,6 @@
+ .B ezmlm-send
+ to construct sender addresses for outgoing messages.
+ 
+-The first lines of
+-.I dir\fB/inlocal
+-and
+-.I dir\fB/inhost
+-give the incoming name of the mailing list.
+-These are used by
+-.B ezmlm-manage
+-to parse incoming envelopes.
+-Normally
+-.I inlocal
+-and
+-.I inhost
+-are the same as
+-.I outlocal
+-and
+-.IR outhost ,
+-but sometimes they are different,
+-with
+-.I outlocal\fB@\fIouthost
+-forwarded to
+-.IR inlocal\fB@\fIinhost .
+-
+ If
+ .I dir\fB/sublist
+ exists,
+@@ -292,6 +818,44 @@
+ This affects the behavior of
+ .BR ezmlm-send .
+ 
++If
++.I dir\fB/qmqpservers
++exists,
++.B ezmlm-send
++and
++.B ezmlm-get
++will use
++.B qmail-qmqpc(1)
++to send posts and digests. Other mail will use the normal qmail mechanism.
++If
++.B qmail-qmqpc
++is modified correctly, server IP addresses listed one per line in
++.I dir\fB/qmqpsevers
++will be tried in order, rather than the default servers specified in
++.IR /var/qmail/control .
++
++If
++.I dir\fB/msgsize
++exists, it is assumed to contain ``max:min'', where ``max'' is the maximum
++size in bytes of an acceptable message body, and ``min'' the corresponding
++minimal size. Either will be ignored if zero or omitted. If the
++.B ezmlm-reject
++command line specifies the list directory, messages not meeting the size
++criteria are rejected.
++
++If
++.I dir\fB/charset
++exists, the first line is assumed to represent a valid MIME character set,
++which is used for all outgoing MIME messages sent by
++.B ezmlm-get 
++and the message moderation programs. The character set string may be suffixed
++with ':' and 'Q' or 'B' to send all outgoing
++text (ezmlm messages, digest table-of-contents, moderation requests, etc)
++encoded in ``Quoted-Printable'' or ``base64'' encoding. By default, no encoding
++is done, which may result in the transmission of characters with the high
++bit set. When encoding is specified, trigger messages and other parts of the
++reply that should not be encoded are sent as separate MIME parts.
++
+ .I dir\fB/lock
+ is an empty file.
+ Any program that reads or writes the subscriber list,
+@@ -304,14 +868,54 @@
+ .B WARNING:
+ .B Log
+ is not protected against system crashes.
+-Log entries may be missing or corrupted if the system goes down.
++Log entries may be missing or corrupted if the system goes down. There is
++Log for each of the accessory address databases as well. Thus, the log
++for digest subscribers is
++.IR dir\fB/digest/Log .
++If enabled, these logs can be retrieved by remote administrators (see
++.BR ezmlm-manage(1) ).
++
++.I dir\fB/digest
++contains items specific for the digest list.
++
++.I dir\fB/digest/subscribers
++contains hash files of digest subscriber addresses.
++
++.IR dir\fB/digest/Log ,
++.IR dir\fB/digest/bounce ,
++.IR dir\fB/digest/lockbounce ,
++and
++.I dir\fB/digest/lock
++have functions for the digest list that mirror that of the corresponding
++files in
++.IR dir .
++
++.I dir\fB/sql
++contains SQL server access information for list that are configured to
++use an SQL database for storage.
++
++.I dir\fB/tstdig
++is a timestamp used temporarily by
++.B ezmlm-tstdig(1)
++to coordinate digesting.
+ .SH "SEE ALSO"
++ezmlm-check(1),
++ezmlm-clean(1),
++ezmlm-gate(1),
++ezmlm-get(1),
++ezmlm-idx(1),
++ezmlm-issub(1),
++ezmlm-issubn(1),
+ ezmlm-list(1),
+ ezmlm-make(1),
+ ezmlm-manage(1),
++ezmlm-moderate(1),
++ezmlm-request(1),
+ ezmlm-return(1),
+ ezmlm-send(1),
++ezmlm-store(1),
+ ezmlm-sub(1),
++ezmlm-tstdig(1),
+ ezmlm-unsub(1),
+ ezmlm-warn(1),
+ dot-qmail(5)
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/fmt_str.c ./fmt_str.c
+--- fmt_str.c	1997-06-29 21:11:54.000000000 -0600
++++ fmt_str.c	2007-10-01 15:44:17.000000000 -0600
+@@ -1,12 +1,11 @@
+ #include "fmt.h"
+ 
+-unsigned int fmt_str(s,t)
+-register char *s; register char *t;
++unsigned int fmt_str(char *s,const char *t)
+ {
+-  register unsigned int len;
++  unsigned int len;
+   char ch;
+   len = 0;
+-  if (s) { while (ch = t[len]) s[len++] = ch; }
++  if (s) { while ((ch = t[len]) != 0) s[len++] = ch; }
+   else while (t[len]) len++;
+   return len;
+ }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/fork.h1 ./fork.h1
+--- fork.h1	1997-06-29 21:11:54.000000000 -0600
++++ fork.h1	2007-10-01 23:16:30.000000000 -0600
+@@ -1,7 +1,8 @@
+ #ifndef FORK_H
+ #define FORK_H
+ 
+-extern int fork();
++#include <sys/types.h>
++extern pid_t fork();
+ #define vfork fork
+ 
+ #endif
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/fork.h2 ./fork.h2
+--- fork.h2	1997-06-29 21:11:54.000000000 -0600
++++ fork.h2	2007-10-01 23:16:30.000000000 -0600
+@@ -1,7 +1,8 @@
+ #ifndef FORK_H
+ #define FORK_H
+ 
+-extern int fork();
+-extern int vfork();
++#include <sys/types.h>
++extern pid_t fork();
++extern pid_t vfork();
+ 
+ #endif
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/getconf.c ./getconf.c
+--- getconf.c	1997-06-29 21:11:54.000000000 -0600
++++ getconf.c	2007-10-05 11:25:27.000000000 -0600
+@@ -1,61 +1,58 @@
++/*$Id$*/
++
+ #include "stralloc.h"
++#include "byte.h"
+ #include "slurp.h"
+ #include "strerr.h"
+ #include "getconf.h"
++#include "altpath.h"
++#include "die.h"
++#include "config.h"
++#include "copy.h"
++#include "idx.h"
++#include "errtxt.h"
+ 
+ static stralloc data = {0};
++static stralloc xdata = {0};
+ 
+-void nomem(fatal)
+-char *fatal;
+-{
+-  strerr_die2x(111,fatal,"out of memory");
+-}
+-
+-int getconf(sa,fn,flagrequired,fatal,dir)
+-stralloc *sa;
+-char *fatal;
+-int flagrequired;
+-char *dir;
+-char *fn;
++int getconf(stralloc *sa,const char *fn,int flagrequired,
++	    const char *dir)
+ {
+   int i;
+-  int j;
++  unsigned int j;
+   int k;
+ 
+   if (!stralloc_copys(&data,""))
+-    nomem(fatal);
+-  switch(slurp(fn,&data,128)) {
++    die_nomem();
++  switch (alt_slurp(fn,&data,128)) {
+     case -1:
+-      strerr_die6sys(111,fatal,"unable to read ",dir,"/",fn,": ");
++      strerr_die6sys(111,FATAL,ERR_READ,dir,"/",fn,": ");
+     case 0:
+       if (!flagrequired)
+ 	return 0;
+-      strerr_die5x(100,fatal,dir,"/",fn," does not exist");
++      strerr_die5x(100,FATAL,dir,"/",fn,ERR_NOEXIST);
+   }
+-  if (!stralloc_append(&data,"\n")) nomem(fatal);
+-  if (!stralloc_copys(sa,"")) nomem(fatal);
++  if (!stralloc_append(&data,"\n")) die_nomem();
++  copy_xlate(&xdata,&data,'H');
++  if (!stralloc_copys(sa,"")) die_nomem();
+   i = 0;
+-  for (j = 0;j < data.len;++j)
+-    if (data.s[j] == '\n') {
++  for (j = 0;j < xdata.len;++j)
++    if (xdata.s[j] == '\n') {
+       k = j;
+-      while ((k > i) && ((data.s[k-1] == ' ') || (data.s[k-1] == '\t'))) --k;
+-      if ((k > i) && (data.s[i] != '#')) {
+-        if (!stralloc_catb(sa,data.s + i,k - i)) nomem(fatal);
+-        if (!stralloc_0(sa)) nomem(fatal);
++      while ((k > i) && ((xdata.s[k-1] == ' ') || (xdata.s[k-1] == '\t'))) --k;
++      if ((k > i) && (xdata.s[i] != '#')) {
++        if (!stralloc_catb(sa,xdata.s + i,k - i)) die_nomem();
++        if (!stralloc_0(sa)) die_nomem();
+       }
+       i = j + 1;
+     }
+   return 1;
+ }
+ 
+-int getconf_line(sa,fn,flagrequired,fatal,dir)
+-stralloc *sa;
+-char *fatal;
+-int flagrequired;
+-char *dir;
+-char *fn;
++int getconf_line(stralloc *sa,const char *fn,int flagrequired,
++		 const char *dir)
+ {
+-  if (!getconf(sa,fn,flagrequired,fatal,dir)) return 0;
++  if (!getconf(sa,fn,flagrequired,dir)) return 0;
+   sa->len = byte_chr(sa->s,sa->len,0);
+   return 1;
+ }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/getln.c ./getln.c
+--- getln.c	1997-06-29 21:11:54.000000000 -0600
++++ getln.c	2007-10-01 15:44:17.000000000 -0600
+@@ -3,11 +3,7 @@
+ #include "stralloc.h"
+ #include "getln.h"
+ 
+-int getln(ss,sa,match,sep)
+-register substdio *ss;
+-register stralloc *sa;
+-int *match;
+-int sep;
++int getln(substdio *ss,stralloc *sa,int *match,int sep)
+ {
+   char *cont;
+   unsigned int clen;
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/getln2.c ./getln2.c
+--- getln2.c	1997-06-29 21:11:54.000000000 -0600
++++ getln2.c	2007-10-01 15:44:17.000000000 -0600
+@@ -3,16 +3,12 @@
+ #include "byte.h"
+ #include "getln.h"
+ 
+-int getln2(ss,sa,cont,clen,sep)
+-register substdio *ss;
+-register stralloc *sa;
+-/*@out@*/char **cont;
+-/*@out@*/unsigned int *clen;
+-int sep;
++int getln2(substdio *ss,stralloc *sa,
++	   /*@out@*/char **cont,/*@out@*/unsigned int *clen,int sep)
+ {
+-  register char *x;
+-  register unsigned int i;
+-  int n;
++  char *x;
++  unsigned int i;
++  unsigned int n;
+  
+   if (!stralloc_ready(sa,0)) return -1;
+   sa->len = 0;
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/install.c ./install.c
+--- install.c	1997-06-29 21:11:54.000000000 -0600
++++ install.c	2007-10-05 11:25:27.000000000 -0600
+@@ -1,3 +1,6 @@
++#include <sys/types.h>
++#include <sys/stat.h>
++#include <unistd.h>
+ #include "substdio.h"
+ #include "stralloc.h"
+ #include "getln.h"
+@@ -7,11 +10,12 @@
+ #include "error.h"
+ #include "strerr.h"
+ #include "byte.h"
++#include "scan.h"
+ 
+ stralloc target = {0};
+ char *to;
+ 
+-#define FATAL "install: fatal: "
++const char FATAL[] = "install: fatal: ";
+ void nomem() { strerr_die2x(111,FATAL,"out of memory"); }
+ 
+ char inbuf[SUBSTDIO_INSIZE];
+@@ -67,6 +71,7 @@
+   if (!stralloc_cats(&target,mid)) nomem();
+   if (!stralloc_cats(&target,name)) nomem();
+   if (!stralloc_0(&target)) nomem();
++  if (xlen > 0) name = x;
+ 
+   uid = -1; if (*uidstr) scan_ulong(uidstr,&uid);
+   gid = -1; if (*gidstr) scan_ulong(gidstr,&gid);
+@@ -133,8 +138,11 @@
+   for (;;) {
+     if (getln(&in,&line,&match,'\n') == -1)
+       strerr_die2sys(111,FATAL,"unable to read input: ");
++    if (line.len > 0)
++      line.s[--line.len] = 0;
+     doit(&line);
+     if (!match)
+       _exit(0);
+   }
++  (void)argc;
+ }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/log.c ./log.c
+--- log.c	1997-06-29 21:11:54.000000000 -0600
++++ log.c	2007-10-05 11:25:27.000000000 -0600
+@@ -1,3 +1,6 @@
++/*$Id$*/
++
++#include <unistd.h>
+ #include "substdio.h"
+ #include "readwrite.h"
+ #include "stralloc.h"
+@@ -5,15 +8,20 @@
+ #include "now.h"
+ #include "fmt.h"
+ #include "open.h"
++#include "subscribe.h"
++
++/* appends (not crash-proof) a line to "Log". The format is: */
++/* "timestamp event address[ comment]\n". address is free of ' ' */
++/* Unprintable chars are changed to '?'. Comment may have spaces */
+ 
+ static substdio ss;
+ static char buf[1];
+ static char num[FMT_ULONG];
+ static stralloc line = {0};
++static stralloc fn = {0};
+ 
+-void log(event,addr)
+-char *event;
+-char *addr;
++void logaddr(const char *dir,const char *subdir,const char *event,
++	     const char *addr,const char *comment)
+ {
+   char ch;
+   int fd;
+@@ -22,13 +30,24 @@
+   if (!stralloc_cats(&line," ")) return;
+   if (!stralloc_cats(&line,event)) return;
+   if (!stralloc_cats(&line," ")) return;
+-  while (ch = *addr++) {
++  while ((ch = *addr++) != 0) {
+     if ((ch < 33) || (ch > 126)) ch = '?';
+     if (!stralloc_append(&line,&ch)) return;
+   }
++  if (comment && *comment) {
++    if (!stralloc_cats(&line," ")) return;
++    while ((ch = *comment++) != 0) {
++      if (ch == '\t')
++        ch = ' ';
++      else 
++        if ((ch < 32) || (ch > 126)) ch = '?';
++      if (!stralloc_append(&line,&ch)) return;
++    }
++  }
+   if (!stralloc_cats(&line,"\n")) return;
+ 
+-  fd = open_append("Log");
++  std_makepath(&fn,dir,subdir,"/Log",0);
++  fd = open_append(fn.s);
+   if (fd == -1) return;
+   substdio_fdbuf(&ss,write,fd,buf,sizeof(buf));
+   substdio_putflush(&ss,line.s,line.len);
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/make-load.sh ./make-load.sh
+--- make-load.sh	1997-06-29 21:11:54.000000000 -0600
++++ make-load.sh	2007-10-01 15:44:18.000000000 -0600
+@@ -1,2 +1,2 @@
+ echo 'main="$1"; shift'
+-echo exec "$LD" '-o "$main" "$main".o ${1+"$@"}'
++echo exec "$LD" '-o "$main" "$main".o -L. ${1+"$@"}'
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/now.c ./now.c
+--- now.c	1997-06-29 21:11:54.000000000 -0600
++++ now.c	2007-10-01 15:44:18.000000000 -0600
+@@ -2,7 +2,7 @@
+ #include "datetime.h"
+ #include "now.h"
+ 
+-datetime_sec now()
++datetime_sec now(void)
+ {
+   return time((long *) 0);
+ }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/now.h ./now.h
+--- now.h	1997-06-29 21:11:54.000000000 -0600
++++ now.h	2007-10-01 15:44:18.000000000 -0600
+@@ -3,6 +3,6 @@
+ 
+ #include "datetime.h"
+ 
+-extern datetime_sec now();
++extern datetime_sec now(void);
+ 
+ #endif
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/open_append.c ./open_append.c
+--- open_append.c	1997-06-29 21:11:54.000000000 -0600
++++ open_append.c	2007-10-01 15:44:18.000000000 -0600
+@@ -1,6 +1,8 @@
++/* Public domain, from daemontools-0.76. */
++
+ #include <sys/types.h>
+ #include <fcntl.h>
+ #include "open.h"
+ 
+-int open_append(fn) char *fn;
++int open_append(const char *fn)
+ { return open(fn,O_WRONLY | O_NDELAY | O_APPEND | O_CREAT,0600); }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/open_read.c ./open_read.c
+--- open_read.c	1997-06-29 21:11:54.000000000 -0600
++++ open_read.c	2007-10-01 15:44:18.000000000 -0600
+@@ -1,6 +1,8 @@
++/* Public domain, from daemontools-0.76. */
++
+ #include <sys/types.h>
+ #include <fcntl.h>
+ #include "open.h"
+ 
+-int open_read(fn) char *fn;
++int open_read(const char *fn)
+ { return open(fn,O_RDONLY | O_NDELAY); }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/quote.c ./quote.c
+--- quote.c	1997-06-29 21:11:54.000000000 -0600
++++ quote.c	2007-10-01 15:44:18.000000000 -0600
+@@ -9,19 +9,17 @@
+ no special encoding here for bytes above 127.
+ */
+ 
+-static char ok[128] = {
++static const char ok[128] = {
+  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 ,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+ ,0,7,0,7,7,7,7,7,0,0,7,7,0,7,7,7 ,7,7,7,7,7,7,7,7,7,7,0,0,0,7,0,7
+ ,0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7 ,7,7,7,7,7,7,7,7,7,7,7,0,0,0,7,7
+ ,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7 ,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,0
+ } ;
+ 
+-static int doit(saout,sain)
+-stralloc *saout;
+-stralloc *sain;
++static int doit(stralloc *saout,const stralloc *sain)
+ {
+  char ch;
+- int i;
++ unsigned int i;
+  int j;
+ 
+  if (!stralloc_ready(saout,sain->len * 2 + 2)) return 0;
+@@ -39,12 +37,10 @@
+  return 1;
+ }
+ 
+-int quote_need(s,n)
+-char *s;
+-unsigned int n;
++int quote_need(const char *s,unsigned int n)
+ {
+  unsigned char uch;
+- int i;
++ unsigned int i;
+  if (!n) return 0;
+  for (i = 0;i < n;++i)
+   {
+@@ -58,9 +54,7 @@
+  return 0;
+ }
+ 
+-int quote(saout,sain)
+-stralloc *saout;
+-stralloc *sain;
++int quote(stralloc *saout,const stralloc *sain)
+ {
+  if (quote_need(sain->s,sain->len)) return doit(saout,sain);
+  return stralloc_copy(saout,sain);
+@@ -68,9 +62,7 @@
+ 
+ static stralloc foo = {0};
+ 
+-int quote2(sa,s)
+-stralloc *sa;
+-char *s;
++int quote2(stralloc *sa,const char *s)
+ {
+  int j;
+  j = str_rchr(s,'@');
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/readwrite.h ./readwrite.h
+--- readwrite.h	1997-06-29 21:11:54.000000000 -0600
++++ readwrite.h	2007-10-01 15:44:18.000000000 -0600
+@@ -1,7 +1,8 @@
+ #ifndef READWRITE_H
+ #define READWRITE_H
+ 
+-extern int read();
+-extern int write();
++#include <sys/types.h>
++extern ssize_t read();
++extern ssize_t write();
+ 
+ #endif
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/scan_8long.c ./scan_8long.c
+--- scan_8long.c	1997-06-29 21:11:54.000000000 -0600
++++ scan_8long.c	2007-10-01 15:44:18.000000000 -0600
+@@ -1,9 +1,10 @@
+ #include "scan.h"
+ 
+-unsigned int scan_8long(s,u) register char *s; register unsigned long *u;
++unsigned int scan_8long(const char *s,unsigned long *u)
+ {
+-  register unsigned int pos; register unsigned long result;
+-  register unsigned long c;
++  unsigned int pos;
++  unsigned long result;
++  unsigned long c;
+   pos = 0; result = 0;
+   while ((c = (unsigned long) (unsigned char) (s[pos] - '0')) < 8)
+     { result = result * 8 + c; ++pos; }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/sig_catch.c ./sig_catch.c
+--- sig_catch.c	1997-06-29 21:11:54.000000000 -0600
++++ sig_catch.c	2007-10-01 15:44:18.000000000 -0600
+@@ -2,9 +2,7 @@
+ #include "sig.h"
+ #include "hassgact.h"
+ 
+-void sig_catch(sig,f)
+-int sig;
+-void (*f)();
++void sig_catch(int sig,void (*f)(int))
+ {
+ #ifdef HASSIGACTION
+   struct sigaction sa;
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/sig_pipe.c ./sig_pipe.c
+--- sig_pipe.c	1997-06-29 21:11:54.000000000 -0600
++++ sig_pipe.c	2007-10-01 15:44:18.000000000 -0600
+@@ -1,5 +1,5 @@
+ #include <signal.h>
+ #include "sig.h"
+ 
+-void sig_pipeignore() { sig_catch(SIGPIPE,SIG_IGN); }
+-void sig_pipedefault() { sig_catch(SIGPIPE,SIG_DFL); }
++void sig_pipeignore(void) { sig_catch(SIGPIPE,SIG_IGN); }
++void sig_pipedefault(void) { sig_catch(SIGPIPE,SIG_DFL); }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/slurp.c ./slurp.c
+--- slurp.c	1997-06-29 21:11:54.000000000 -0600
++++ slurp.c	2007-10-01 15:44:18.000000000 -0600
+@@ -1,12 +1,12 @@
++/*$Id$*/
++
+ #include "stralloc.h"
+ #include "slurp.h"
++#include "slurpclose.h"
+ #include "error.h"
+ #include "open.h"
+ 
+-int slurp(fn,sa,bufsize)
+-char *fn;
+-stralloc *sa;
+-int bufsize;
++int slurp(const char *fn,stralloc *sa,int bufsize)
+ {
+   int fd;
+   fd = open_read(fn);
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/slurpclose.c ./slurpclose.c
+--- slurpclose.c	1997-06-29 21:11:54.000000000 -0600
++++ slurpclose.c	2007-10-01 15:44:18.000000000 -0600
+@@ -1,12 +1,12 @@
++/*$Id$*/
++
++#include <unistd.h>
+ #include "stralloc.h"
+ #include "readwrite.h"
+ #include "slurpclose.h"
+ #include "error.h"
+ 
+-int slurpclose(fd,sa,bufsize)
+-int fd;
+-stralloc *sa;
+-int bufsize;
++int slurpclose(int fd,stralloc *sa,int bufsize)
+ {
+   int r;
+   for (;;) {
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/str_cpy.c ./str_cpy.c
+--- str_cpy.c	1997-06-29 21:11:54.000000000 -0600
++++ str_cpy.c	2007-10-01 15:44:18.000000000 -0600
+@@ -1,10 +1,8 @@
+ #include "str.h"
+ 
+-unsigned int str_copy(s,t)
+-register char *s;
+-register char *t;
++unsigned int str_copy(char *s,const char *t)
+ {
+-  register int len;
++  int len;
+ 
+   len = 0;
+   for (;;) {
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/str_diffn.c ./str_diffn.c
+--- str_diffn.c	1997-06-29 21:11:54.000000000 -0600
++++ str_diffn.c	2007-10-01 15:44:18.000000000 -0600
+@@ -1,11 +1,8 @@
+ #include "str.h"
+ 
+-int str_diffn(s,t,len)
+-register char *s;
+-register char *t;
+-unsigned int len;
++int str_diffn(const char *s,const char *t,unsigned int len)
+ {
+-  register char x;
++  char x;
+ 
+   for (;;) {
+     if (!len--) return 0; x = *s; if (x != *t) break; if (!x) break; ++s; ++t;
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/stralloc_arts.c ./stralloc_arts.c
+--- stralloc_arts.c	1997-06-29 21:11:54.000000000 -0600
++++ stralloc_arts.c	2007-10-01 15:44:18.000000000 -0600
+@@ -2,11 +2,9 @@
+ #include "str.h"
+ #include "stralloc.h"
+ 
+-int stralloc_starts(sa,s)
+-stralloc *sa;
+-char *s;
++int stralloc_starts(stralloc *sa,const char *s)
+ {
+-  int len;
++  unsigned int len;
+   len = str_len(s);
+   return (sa->len >= len) && byte_equal(s,len,sa->s);
+ }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/strerr.c ./strerr.c
+--- strerr.c	1997-06-29 21:11:54.000000000 -0600
++++ strerr.c	2007-10-01 15:44:18.000000000 -0600
+@@ -3,8 +3,7 @@
+ 
+ static stralloc sa = {0};
+ 
+-char *strerr(se)
+-struct strerr *se;
++const char *strerr(const struct strerr *se)
+ {
+   strerr_sysinit();
+  
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/strerr.h ./strerr.h
+--- strerr.h	1997-06-29 21:11:54.000000000 -0600
++++ strerr.h	2007-10-01 15:44:18.000000000 -0600
+@@ -1,21 +1,37 @@
+ #ifndef STRERR_H
+ #define STRERR_H
+ 
++#include "hasattribute.h"
++
+ struct strerr
+  {
+   struct strerr *who;
+-  char *x;
+-  char *y;
+-  char *z;
++  const char *x;
++  const char *y;
++  const char *z;
+  }
+ ;
+ 
+ extern struct strerr strerr_sys;
+-extern void strerr_sysinit();
++extern void strerr_sysinit(void);
+ 
+-extern char *strerr();
+-extern void strerr_warn();
+-extern void strerr_die();
++extern const char *strerr(const struct strerr *se);
++extern void strerr_warn(const char *x1,
++			const char *x2,
++			const char *x3,
++			const char *x4,
++			const char *x5,
++			const char *x6,
++			const struct strerr *se);
++extern void strerr_die(int e,
++		       const char *x1,
++		       const char *x2,
++		       const char *x3,
++		       const char *x4,
++		       const char *x5,
++		       const char *x6,
++		       const struct strerr *se)
++     __attribute__((noreturn));
+ 
+ #define STRERR(r,se,a) \
+ { se.who = 0; se.x = a; se.y = 0; se.z = 0; return r; }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/strerr_die.c ./strerr_die.c
+--- strerr_die.c	1997-06-29 21:11:54.000000000 -0600
++++ strerr_die.c	2007-10-01 15:44:18.000000000 -0600
+@@ -3,9 +3,13 @@
+ #include "exit.h"
+ #include "strerr.h"
+ 
+-void strerr_warn(x1,x2,x3,x4,x5,x6,se)
+-char *x1; char *x2; char *x3; char *x4; char *x5; char *x6;
+-struct strerr *se;
++void strerr_warn(const char *x1,
++		 const char *x2,
++		 const char *x3,
++		 const char *x4,
++		 const char *x5,
++		 const char *x6,
++		 const struct strerr *se)
+ {
+   strerr_sysinit();
+  
+@@ -27,10 +31,14 @@
+   substdio_flush(subfderr);
+ }
+ 
+-void strerr_die(e,x1,x2,x3,x4,x5,x6,se)
+-int e;
+-char *x1; char *x2; char *x3; char *x4; char *x5; char *x6;
+-struct strerr *se;
++void strerr_die(int e,
++		const char *x1,
++		const char *x2,
++		const char *x3,
++		const char *x4,
++		const char *x5,
++		const char *x6,
++		const struct strerr *se)
+ {
+   strerr_warn(x1,x2,x3,x4,x5,x6,se);
+   _exit(e);
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/strerr_sys.c ./strerr_sys.c
+--- strerr_sys.c	1997-06-29 21:11:54.000000000 -0600
++++ strerr_sys.c	2007-10-01 15:44:18.000000000 -0600
+@@ -3,7 +3,7 @@
+ 
+ struct strerr strerr_sys;
+ 
+-void strerr_sysinit()
++void strerr_sysinit(void)
+ {
+   strerr_sys.who = 0;
+   strerr_sys.x = error_str(errno);
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/substdi.c ./substdi.c
+--- substdi.c	1997-06-29 21:11:54.000000000 -0600
++++ substdi.c	2007-10-01 15:44:19.000000000 -0600
+@@ -1,14 +1,12 @@
++/*$Id$*/
++
+ #include "substdio.h"
+ #include "byte.h"
+ #include "error.h"
+ 
+-static int oneread(op,fd,buf,len)
+-register int (*op)();
+-register int fd;
+-register char *buf;
+-register int len;
++static int oneread(int (*op)(),int fd,char *buf,int len)
+ {
+-  register int r;
++  int r;
+ 
+   for (;;) {
+     r = op(fd,buf,len);
+@@ -17,13 +15,10 @@
+   }
+ }
+ 
+-static int getthis(s,buf,len)
+-register substdio *s;
+-register char *buf;
+-register int len;
++static int getthis(substdio *s,char *buf,int len)
+ {
+-  register int r;
+-  register int q;
++  int r;
++  int q;
+  
+   r = s->p;
+   q = r - len;
+@@ -33,11 +28,10 @@
+   return r;
+ }
+ 
+-int substdio_feed(s)
+-register substdio *s;
++int substdio_feed(substdio *s)
+ {
+-  register int r;
+-  register int q;
++  int r;
++  int q;
+ 
+   if (s->p) return s->p;
+   q = s->n;
+@@ -50,12 +44,9 @@
+   return r;
+ }
+ 
+-int substdio_bget(s,buf,len)
+-register substdio *s;
+-register char *buf;
+-register int len;
++int substdio_bget(substdio *s,char *buf,int len)
+ {
+-  register int r;
++  int r;
+  
+   if (s->p > 0) return getthis(s,buf,len);
+   r = s->n; if (r <= len) return oneread(s->op,s->fd,buf,r);
+@@ -63,12 +54,9 @@
+   return getthis(s,buf,len);
+ }
+ 
+-int substdio_get(s,buf,len)
+-register substdio *s;
+-register char *buf;
+-register int len;
++int substdio_get(substdio *s,char *buf,int len)
+ {
+-  register int r;
++  int r;
+  
+   if (s->p > 0) return getthis(s,buf,len);
+   if (s->n <= len) return oneread(s->op,s->fd,buf,len);
+@@ -76,15 +64,12 @@
+   return getthis(s,buf,len);
+ }
+ 
+-char *substdio_peek(s)
+-register substdio *s;
++const char *substdio_peek(substdio *s)
+ {
+   return s->x + s->n;
+ }
+ 
+-void substdio_seek(s,len)
+-register substdio *s;
+-register int len;
++void substdio_seek(substdio *s,int len)
+ {
+   s->n += len;
+   s->p -= len;
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/substdio.c ./substdio.c
+--- substdio.c	1997-06-29 21:11:54.000000000 -0600
++++ substdio.c	2007-10-01 15:44:19.000000000 -0600
+@@ -1,11 +1,8 @@
++/*$Id$*/
++
+ #include "substdio.h"
+ 
+-void substdio_fdbuf(s,op,fd,buf,len)
+-register substdio *s;
+-register int (*op)();
+-register int fd;
+-register char *buf;
+-register int len;
++void substdio_fdbuf(substdio *s,int (*op)(),int fd,char *buf,int len)
+ {
+   s->x = buf;
+   s->fd = fd;
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/substdio.h ./substdio.h
+--- substdio.h	1997-06-29 21:11:54.000000000 -0600
++++ substdio.h	2007-10-01 15:44:19.000000000 -0600
+@@ -11,22 +11,22 @@
+ 
+ #define SUBSTDIO_FDBUF(op,fd,buf,len) { (buf), 0, (len), (fd), (op) }
+ 
+-extern void substdio_fdbuf();
++extern void substdio_fdbuf(substdio *s,int (*op)(),int fd,char *buf,int len);
+ 
+-extern int substdio_flush();
+-extern int substdio_put();
+-extern int substdio_bput();
+-extern int substdio_putflush();
+-extern int substdio_puts();
+-extern int substdio_bputs();
+-extern int substdio_putsflush();
+-
+-extern int substdio_get();
+-extern int substdio_bget();
+-extern int substdio_feed();
++extern int substdio_flush(substdio *s);
++extern int substdio_put(substdio *s,const char *buf,int len);
++extern int substdio_bput(substdio *s,const char *buf,int len);
++extern int substdio_putflush(substdio *s,const char *buf,int len);
++extern int substdio_puts(substdio *s,const char *buf);
++extern int substdio_bputs(substdio *s,const char *buf);
++extern int substdio_putsflush(substdio *s,const char *buf);
++
++extern int substdio_get(substdio *s,char *buf,int len);
++extern int substdio_bget(substdio *s,char *buf,int len);
++extern int substdio_feed(substdio *s);
+ 
+-extern char *substdio_peek();
+-extern void substdio_seek();
++extern const char *substdio_peek(substdio *s);
++extern void substdio_seek(substdio *s,int len);
+ 
+ #define substdio_fileno(s) ((s)->fd)
+ 
+@@ -42,6 +42,6 @@
+     : substdio_bput((s),&(c),1) \
+   )
+ 
+-extern int substdio_copy();
++extern int substdio_copy(substdio *ssout,substdio *ssin);
+ 
+ #endif
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/substdio_copy.c ./substdio_copy.c
+--- substdio_copy.c	1997-06-29 21:11:54.000000000 -0600
++++ substdio_copy.c	2007-10-01 15:44:19.000000000 -0600
+@@ -1,11 +1,11 @@
++/*$Id$*/
++
+ #include "substdio.h"
+ 
+-int substdio_copy(ssout,ssin)
+-register substdio *ssout;
+-register substdio *ssin;
++int substdio_copy(substdio *ssout,substdio *ssin)
+ {
+-  register int n;
+-  register char *x;
++  int n;
++  char *x;
+ 
+   for (;;) {
+     n = substdio_feed(ssin);
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/substdo.c ./substdo.c
+--- substdo.c	1997-06-29 21:11:54.000000000 -0600
++++ substdo.c	2007-10-01 15:44:19.000000000 -0600
+@@ -1,15 +1,13 @@
++/*$Id$*/
++
+ #include "substdio.h"
+ #include "str.h"
+ #include "byte.h"
+ #include "error.h"
+ 
+-static int allwrite(op,fd,buf,len)
+-register int (*op)();
+-register int fd;
+-register char *buf;
+-register int len;
++static int allwrite(int (*op)(),int fd,const char *buf,int len)
+ {
+-  register int w;
++  int w;
+ 
+   while (len) {
+     w = op(fd,buf,len);
+@@ -24,10 +22,9 @@
+   return 0;
+ }
+ 
+-int substdio_flush(s)
+-register substdio *s;
++int substdio_flush(substdio *s)
+ {
+-  register int p;
++  int p;
+  
+   p = s->p;
+   if (!p) return 0;
+@@ -35,12 +32,9 @@
+   return allwrite(s->op,s->fd,s->x,p);
+ }
+ 
+-int substdio_bput(s,buf,len)
+-register substdio *s;
+-register char *buf;
+-register int len;
++int substdio_bput(substdio *s,const char *buf,int len)
+ {
+-  register int n;
++  int n;
+  
+   while (len > (n = s->n - s->p)) {
+     byte_copy(s->x + s->p,n,buf); s->p += n; buf += n; len -= n;
+@@ -52,12 +46,9 @@
+   return 0;
+ }
+ 
+-int substdio_put(s,buf,len)
+-register substdio *s;
+-register char *buf;
+-register int len;
++int substdio_put(substdio *s,const char *buf,int len)
+ {
+-  register int n;
++  int n;
+  
+   n = s->n;
+   if (len > n - s->p) {
+@@ -77,32 +68,23 @@
+   return 0;
+ }
+ 
+-int substdio_putflush(s,buf,len)
+-register substdio *s;
+-register char *buf;
+-register int len;
++int substdio_putflush(substdio *s,const char *buf,int len)
+ {
+   if (substdio_flush(s) == -1) return -1;
+   return allwrite(s->op,s->fd,buf,len);
+ }
+ 
+-int substdio_bputs(s,buf)
+-register substdio *s;
+-register char *buf;
++int substdio_bputs(substdio *s,const char *buf)
+ {
+   return substdio_bput(s,buf,str_len(buf));
+ }
+ 
+-int substdio_puts(s,buf)
+-register substdio *s;
+-register char *buf;
++int substdio_puts(substdio *s,const char *buf)
+ {
+   return substdio_put(s,buf,str_len(buf));
+ }
+ 
+-int substdio_putsflush(s,buf)
+-register substdio *s;
+-register char *buf;
++int substdio_putsflush(substdio *s,const char *buf)
+ {
+   return substdio_putflush(s,buf,str_len(buf));
+ }
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/surf.c ./surf.c
+--- surf.c	1997-06-29 21:11:54.000000000 -0600
++++ surf.c	2007-10-01 15:44:19.000000000 -0600
+@@ -1,13 +1,11 @@
+ /* 19970320, overlap allowed 19970406 */
+ 
+ #include "surf.h"
+-#include "uint32.h"
+ 
+ #define ROTATE(x,b) (((x) << (b)) | ((x) >> (32 - (b))))
+ #define MUSH(i,b) x = t[i] += (((x ^ seed[i]) + sum) ^ ROTATE(x,b));
+ 
+-void surf(out,in,seed)
+-uint32 out[8]; uint32 in[12]; uint32 seed[32];
++void surf(uint32 out[8],const uint32 in[12],const uint32 seed[32])
+ {
+   uint32 t[12]; uint32 x; uint32 sum = 0;
+   int r; int i; int loop;
+diff -u -X REPLACED -x '*.[ao]' -x '*~' -x '*.do' -x '*=*' ezmlm-0.53/surfpcs.c ./surfpcs.c
+--- surfpcs.c	1997-06-29 21:11:54.000000000 -0600
++++ surfpcs.c	2007-10-01 15:44:19.000000000 -0600
+@@ -1,11 +1,11 @@
++/*$Id$*/
++
+ /* XXX: this needs testing */
+ 
+ #include "surf.h"
+ #include "surfpcs.h"
+ 
+-void surfpcs_init(s,k)
+-surfpcs *s;
+-uint32 k[32];
++void surfpcs_init(surfpcs *s,const uint32 k[32])
+ {
+   int i;
+   for (i = 0;i < 32;++i) s->seed[i] = k[i];
+@@ -14,7 +14,7 @@
+   s->todo = 0;
+ }
+ 
+-static uint32 littleendian[8] = {
++static const uint32 littleendian[8] = {
+   50462976, 117835012, 185207048, 252579084,
+   319951120, 387323156, 454695192, 522067228
+ } ;
+@@ -23,10 +23,7 @@
+ #define data ((unsigned char *) s->in)
+ #define outdata ((unsigned char *) s->out)
+ 
+-void surfpcs_add(s,x,n)
+-surfpcs *s;
+-unsigned char *x;
+-unsigned int n;
++void surfpcs_add(surfpcs *s,const unsigned char *x,unsigned int n)
+ {
+   int i;
+   while (n--) {
+@@ -44,9 +41,7 @@
+   }
+ }
+ 
+-void surfpcs_out(s,h)
+-surfpcs *s;
+-unsigned char h[32];
++void surfpcs_out(surfpcs *s,unsigned char h[32])
+ {
+   int i;
+   surfpcs_add(s,".",1);

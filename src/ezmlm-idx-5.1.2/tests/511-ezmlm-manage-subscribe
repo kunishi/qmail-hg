@@ -1,0 +1,15 @@
+# $Id$
+
+  prompt "subscribe:            "
+
+  DEFAULT="subscribe"
+  LOCAL="${LOC}-${DEFAULT}"
+  ${EZBIN}/ezmlm-manage -S "$DIR" <"$TMP" >"$ERR" 2>&1 || \
+  fatal "failed to produce subscribe confirmation"
+
+  grephdr_manage
+  grephdr list-unsubscribe: "<mailto:${LOC}-unsubscribe-test=example.org@${HOST}>"
+  grephdr subject: "welcome to ${LOC}@${HOST}"
+  grephdr_empty
+
+  ${ECHO} OK

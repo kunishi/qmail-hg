@@ -1,0 +1,3424 @@
+commit 2b6174060bb3efa9e11c4d3c56f829ccd3a3a465
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Oct 5 12:20:49 2007 -0600
+
+    Use sed to find C dependencies, as cpp was missing some.
+
+commit 61dfb3a04a5f35967148ec7509bab2726aa5c639
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Oct 5 11:28:43 2007 -0600
+
+    Stamped version 5.1.2 with today's date.
+
+commit 697ee51deda24e23fdb602a86e3feda06da08818
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Oct 5 11:25:22 2007 -0600
+
+    Fixed tools/makedist to work with git instead of svn.
+
+commit 008e8646d577dfb54bdf8489b4b74cfcefb7bcf8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 28 18:07:17 2007 +0000
+
+    Fixed the ezmlm-send header test to account for new Sender: header.
+
+commit 87d1a9c425e60ffa6190014681e3bcf1987f5511
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 28 05:10:21 2007 +0000
+
+    Added the necessary Sender: header to make DomainKeys work
+    into the ezmlmrc template.
+
+commit c083e2ba8ea6adb44108290e2c3c69e5a11955e9
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jul 12 02:11:15 2007 +0000
+
+    Fixed ezmlm-send to insert the proper value for the List-ID: header.
+    
+    From: Bill Nugent <whn@lopi.com>
+    To: ezmlm@list.cr.yp.to
+    Subject: ezmlm-idx-5.1.1 bug in ezmlm-send.c
+    Date: Fri, 23 Feb 2007 10:04:08 -0500
+    Message-Id: <200702231004.08420.whn@lopi.com>
+    
+    Howdy,
+    
+    Running ezmlm-0.53 patched with ezmlm-idx 5.1.1 came across a problem
+    where the headers were trashed/garbled  when dir/listid exists.  Search
+    a list archive to no luck on this problem.  So dug into the source code
+    and found what appears to be a bug on line 481 where the wrong variable
+    is being appended to the List-ID: header line and changing it gives the
+    expected results.  Here is a patch:
+    
+    $ diff -u ezmlm-send.c.orig ezmlm-send.c
+    --- ezmlm-send.c.orig   2007-02-23 14:54:43.437831108 +0000
+    +++ ezmlm-send.c        2007-02-23 14:46:01.412832612 +0000
+    @@ -478,7 +478,7 @@
+         if (listid.len > 0) {
+           flaglistid = 1;
+           qmail_puts(&qq,"\nList-ID: ");
+    -      qmail_put(&qq,line.s,line.len);
+    +      qmail_put(&qq,listid.s,listid.len);
+         }
+         qa_puts("\n");
+       }
+    
+    I have not been a subscriber to the list for several years so if there
+    are any responses please include me in the cc.   BTW - 5.1.1 is a nice
+    improvement over ezmlm-idx 0.40.  It is only getting better.  Thank
+    you.
+    
+    	Bill
+
+commit cf8fd4887acbc3e05df055c80d2b72cd572f0dd9
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 11 22:11:33 2007 +0000
+
+    Bumped version to 5.1.2 for bug fixes.
+
+commit 98225406bc0cca0edb2ccc2c4af34f5b02db4bb7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 23 20:57:11 2006 +0000
+
+    Stamped version 5.1.1 with today's date.
+
+commit 32da4072f27461e339652e88ff049a2ccb8f8881
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 23 20:25:16 2006 +0000
+
+    Updated the qmail-verh patch to version 0.07.
+
+commit fc8e287887655eba723297720aeea53a5f194251
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 23 19:53:41 2006 +0000
+
+    Merged in version 0.444 release information.
+
+commit 67949c221f3753997fe82f5cecad255227887072
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 14 22:41:41 2006 +0000
+
+    Added a patch to ezmlm-manage to make it record (un)subscribes initiated
+    by the moderator as +mod and -mod in the DIR/Log file.
+
+commit 0f648765ea40abe50812762994c5e61265d08f38
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 14 21:06:56 2006 +0000
+
+    Tagged the 5.1 branch with version 5.1.1
+
+commit 23d010b3d4e321619dbccf80702f1e67f71aa1d0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Aug 8 17:01:36 2006 +0000
+
+    Made a stable branch for version 5.1.*
+
+commit 11622b946d7fac854880dde9b9bae9966d0c397f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Aug 8 16:11:22 2006 +0000
+
+    Stamped version 5.1.0 for release with today's date.
+
+commit f45ce3eccedce9a7bd037b0c199a5b6ef34b17a5
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Aug 8 16:04:35 2006 +0000
+
+    Make sure errors get displayed to standard error.
+
+commit 9e3b7de6c3bda5c44b19a130289b81024e6cb642
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Aug 8 05:51:23 2006 +0000
+
+    Delete the confirmpost file when editing a list with -Y
+
+commit 7a896e4288cdbb43e3608b85229ece76e95657bb
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Aug 8 05:37:22 2006 +0000
+
+    Added missing #include "wrap.h" to config.c
+
+commit 1794bc38adf7a29e8a19197a35d41f464fad2b1b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Aug 8 05:35:49 2006 +0000
+
+    Added several mailing list indicators to ezmlm-weed.
+
+commit 5da4e4f55ba33ffcfe66fbda61e4865a985f7645
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Aug 8 03:41:29 2006 +0000
+
+    Modified ezmlm-list to accept a relative list subdirectory.
+
+commit c1010340c550af72351620c907cb5196168226db
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Aug 8 03:33:41 2006 +0000
+
+    Modified ezmlm-gate to handle relative subscribe directory names.
+
+commit 6254ecca19a4856d7e81736160f69aec264a6690
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Aug 7 22:47:48 2006 +0000
+
+    Modified ezmlm-sub and ezmlm-unsub to accept relative subdir names.
+
+commit a4656675d3d7792789f4adf6ab4cae29cefaa139
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Aug 7 22:16:25 2006 +0000
+
+    Bumped version to 5.1.0
+
+commit 7cf1dd58058dc5d4ff3f10f32616fcb255b8092b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Aug 7 22:15:50 2006 +0000
+
+    Modified ezmlm-issubn to accept relative subscriber database names.
+    The changes take into account backwards compatibility.
+
+commit 1bf0c19c5795731bf8bc32e51b344895b64f035e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Aug 7 20:09:38 2006 +0000
+
+    Modified ezmlm-dispatch to change directory into the list directory.
+
+commit af9026061ccb2303ebf81ef5bb1cdb1eb6175b24
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Aug 7 19:58:40 2006 +0000
+
+    Modified ezmlm-dispatch to store the full base directory into a single
+    variable instead of separating it into basedir and listdir.
+
+commit 1ae977f77eb2cba50cc656ad4d8eb7874132fd56
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Aug 7 19:41:02 2006 +0000
+
+    Fixed ezmlm-dispatch to properly output the right number of programs
+    executed even if one of them exited non-zero.
+
+commit 02f76d5ba43e68413ca252df654a6106de2fcaf5
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Aug 7 19:23:10 2006 +0000
+
+    Fixed ezmlm-dispatch to handle working in a non-default .qmail file.
+
+commit 6cdb9368c7188c96f56ef216e7955a18103253ed
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Aug 7 19:13:26 2006 +0000
+
+    Added tests for ezmlm-dispatch.
+
+commit 9e12863772762096c896c83351db9bbe5fdc6f2c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Aug 7 17:45:58 2006 +0000
+
+    Clarified a line of code, eliminating a compile warning.
+
+commit e0d9a8ef7de4258cdd3bd75dc13e5349305af7b3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Aug 7 17:39:35 2006 +0000
+
+    Added a wrap_chdir function.
+
+commit c1a9cf094f3bd3e98ee405a517c5b50cf4f4f442
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sat Aug 5 16:06:28 2006 +0000
+
+    Added several more autoresponder signatures to ezmlm-weed:
+    	Auto-Submitted:
+    	X-Amazon-Auto-Reply:
+    	X-Mailer: KANA Response
+    	Thread-Topic: AutoResponse
+    	Subject: AutoResponse -
+
+commit 716a825e4eafa381d1efbdfbaef54eee1214af96
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sat Aug 5 16:05:19 2006 +0000
+
+    Added ezmlm-weed to both the moderator and manager control files.
+
+commit d086e8bc4b4842ac88cfbfd9d9d03ae27e1c6cc0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Aug 4 22:47:48 2006 +0000
+
+    Added a "mimekeep" file that works much the same way as the "headerkeep"
+    file.
+
+commit 846e7ce07770f2ed7030a2cad125551ad6daf2c0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Aug 4 19:35:24 2006 +0000
+
+    Added a new configuration file, "headerkeep" which overrides
+    "headerremove" if it is present.
+
+commit 35604f82ad6ecc965c9cbb2ba5fc364c268bf3b0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Aug 3 21:14:40 2006 +0000
+
+    Several pointer signedness fixes.
+
+commit 761c5f8e10e3bffc6d1af0a8290373093d6621f7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 19 23:03:32 2006 +0000
+
+    Added a new program, ezmlm-import, which imports messages from a mbox
+    file into ezmlm-idx's message archive.
+
+commit 839a10a44b531cbbae89ff85f728e6482ee873d7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 19 21:23:01 2006 +0000
+
+    Fixed the sed expression in tools/makerrors to work with both old and
+    new GCCs.
+
+commit 0f8e4f46a8ca518556ab583ed60cf0e5a3754465
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 19 20:48:30 2006 +0000
+
+    Changed a void** cast to just void* to eliminate an apparently bogus
+    GCC warning about dereferencing a type-punned pointer.
+
+commit d2a96b04e12e235dec4ed54fbce325a1e82e8427
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 19 20:30:46 2006 +0000
+
+    Removed the include for auto_bin in ezmlm-confirm, as it is unused.
+
+commit 70478aa1fc10a5e3587f9de62bd359dcec190f8c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 19 20:30:17 2006 +0000
+
+    Avoid using getconf_line to grab the value of "ezmlmrc".  If the file is
+    not present, getconf_line will grab the alternate location, which is the
+    whole file.
+
+commit bd16b870eb1a9e8581cb950b97b861d72fab3195
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 19 18:10:17 2006 +0000
+
+    Merged several instances of the getconf_line plus scan_ulong pattern
+    into common code.
+
+commit d99b2bdb8a9e07da14d5b5d9e8b28647bac15d9f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 19 16:54:10 2006 +0000
+
+    Fixed minor typo in ERR_SUBST_UNSAFE error message.
+
+commit b65c08ac4c896f9c85903e3e2fbf8a20e0d48833
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 18 22:24:02 2006 +0000
+
+    Modified the vfork test to use pid_t instead of int, to fix
+    portability issues on Solaris.
+
+commit a9351ea14a02f4bcf646bb7159c3877d99ddc7e6
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 18 22:23:13 2006 +0000
+
+    Bumped version to 5.0.3
+
+commit 166a53bd7a1022278b85a7f59fc18c4a953219b1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Mar 9 16:36:17 2006 +0000
+
+    Fixed a typo with the sublist option (-0) in the FAQ.
+    Thanks Adam Ambrose <aambrose@collab.net>
+
+commit 17ed8fff114614a51688896224d5b686d5ba32d6
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 16 17:29:50 2006 +0000
+
+    Forgot to bump VERSION up to 5.0.2
+
+commit 64dd0c345ea1fae6650f901307a6b75dcf8e16f2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 16 17:29:28 2006 +0000
+
+    Stamped version 5.0.2 with today's date.
+
+commit 0c7f39d00b27702e14a93c37a8b4c87b2c6d1618
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 16 17:28:04 2006 +0000
+
+    Added note about man pages needing CONFIGURATION section.
+
+commit 954a117c082e50f1f26c19d733a14ae97c8ec519
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 16 13:53:48 2006 +0000
+
+    Substitute <#c#> in (un)subscribe confirm messages with just the
+    confirmation cookie (ie <#r#> without the <#l#>- prefix).
+
+commit bcba2aabc0b4cbb3fe922948475d324f25b3e998
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 16 04:50:53 2006 +0000
+
+    Fixed bug in generation of a (currently unused) email address in the
+    subscription confirmation message.
+
+commit 9763c7248b3bd4a58cf54627cb29cdbb75a3cee0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jan 13 15:50:42 2006 +0000
+
+    Strip out all -W* options from conf-cc when building the final tarball.
+
+commit d5c5b7b04dc324cb3040e8d02367bfddabe69e6f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jan 13 02:54:49 2006 +0000
+
+    Fixed ezmlm-make to override settings in the config files with command
+    line options instead of the other way around.
+
+commit 4963a0197e64abbb63bedde047a51da87a1b03dd
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 11 22:45:22 2006 +0000
+
+    Modified ezmlm-get, ezmlm-manage, ezmlm-reject, ezmlm-request, and
+    ezmlm-warn to copy a configurable limited number of lines of the
+    original message body into the response.
+
+commit 2e00f7010c348711ea18d683703688310663e58c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 11 22:26:53 2006 +0000
+
+    Switched the order of OPTIONS and DESCRIPTION in the ezmlm-get man page
+    to match the expected and standard order.
+
+commit 99e91b332200034fb2a3f42850293452f977d4f8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Dec 18 22:10:16 2005 +0000
+
+    Updated Spanish translation for post-confirm.
+    Thanks Ruben Cardenal <ruben@ruben.cn>
+
+commit 845d36cd2dc8bfeced41482d88a125cdc32df3b4
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Dec 18 22:08:47 2005 +0000
+
+    Bumped version to 5.0.2
+
+commit b5a33273629c646ce0208511567247b45cc7c721
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Dec 16 19:27:25 2005 +0000
+
+    Stamped version 5.0.1 with today's date.
+
+commit a635c1e542a7328dab1b691ad79177fcb7bdc98d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Dec 16 16:59:32 2005 +0000
+
+    Fixed ezmlm-gate failing to exit 0 on success.
+    Thanks Ian Charnas and Sami Farin.
+
+commit 01f4f0c00438b23a649bd2e6fe4610670947f713
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Dec 16 16:58:41 2005 +0000
+
+    Rewrote the note about languages being out of date in the changes list.
+
+commit 76e721d93ca60894b63c507fd84a588d53902d2f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 10 22:15:36 2005 +0000
+
+    Added missing file in tests/
+
+commit 08e2f8535044e49337e4bf61858b36275a0f0f4c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 10 21:25:47 2005 +0000
+
+    Test to make sure that correct data is substituted in text/trailer
+
+commit dbc2d966cbd553987ad25ae0ee5db53534881ba6
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 10 21:25:15 2005 +0000
+
+    Fixed typo in the name of the directory created in tests/135-ezmlm-make
+
+commit e64da874ea08e7627768e78ded74fbf52cced34c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Oct 6 21:51:06 2005 +0000
+
+    Fixed a bug in ezmlm-cgi caused by the use of "char" type for array
+    index calculations.
+
+commit c9299be088d7df0f7e8e7028f07038313b337963
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Oct 6 21:50:35 2005 +0000
+
+    Updated the edit-list text to include all the texts.
+
+commit 2a5d1b97cf926545085c9591859d3c31d5382c18
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Oct 6 18:52:33 2005 +0000
+
+    Added an explicit revision number to all text messages, to improve
+    tracking of edits and updates.
+
+commit f51c2b5609f318070a6e8ab703d35326762755f8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Oct 4 19:29:49 2005 +0000
+
+    Added missing svn:keywords tag on lang/es/text/post-confirm
+
+commit 545fdb2c50db66624f9ff5d23e5587447d870d91
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Oct 4 19:25:56 2005 +0000
+
+    Added a Spanish translation for post-confirm.
+    Thanks Ruben Cardenal <ruben@ruben.cn>
+
+commit b806ec85924d79187d4c64443cb6a9a96fa24094
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Oct 4 19:24:24 2005 +0000
+
+    Added a proper charset for Japanese texts.
+
+commit 4d57d4232391cd28f241d4572f004dade71e9708
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Oct 4 19:23:18 2005 +0000
+
+    Pull files from the default language (`conf-etc`/default) if they cannot
+    be located in either the list directory or the ezmlmrc directory.
+
+commit 96ff57dce83f1c0ad4095ae0aef15491f16468e5
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Oct 3 17:30:21 2005 +0000
+
+    Bumped version to 5.0.1
+
+commit 50c49a83503402a905cd410856d05d86de8757de
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Oct 3 05:52:17 2005 +0000
+
+    Tidied up changes notes and date-stamped the release.
+
+commit db5423d7e193ff6c28825911900b564d884f297d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Oct 3 05:51:21 2005 +0000
+
+    Fixed up references to /etc/ezmlm/ezmlmrc
+
+commit 2bb2313da6b723e19b5b48843764df458d51ec2f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Oct 3 04:40:53 2005 +0000
+
+    Fixed the ETC list to include the generated ezmlmrc files.
+
+commit 06dbdc445f31830c1d01b97c7d8e5b75cde5e7c8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Oct 2 22:25:08 2005 +0000
+
+    Remove the makeETC step from makedist, as it can cause changes in
+    committed files.
+
+commit e063c7f00ec9658cb3191b5d6a6534874e4a16fd
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Oct 2 04:44:12 2005 +0000
+
+    Made most local variables static, to avoid conflicts with existing
+    globals with the same name, which identified several that could be
+    eliminated.
+
+commit 961c3491ed3e1534a3c9ea2ba35507f3ed9f09f7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Oct 2 04:31:23 2005 +0000
+
+    Add an external "struct qmail" declaration in copy.h to avoid a warning.
+
+commit 58348e1a8ca3aa590a820337e463452b903a026c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Oct 2 04:29:09 2005 +0000
+
+    Moved all of the error reporting logic out of alt_open_read.
+
+commit 391bc022363524e616072f97d41dc1de6b3b1012
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Oct 2 04:25:16 2005 +0000
+
+    Removed unused variable "path".
+
+commit 0b8eb404578bdce7cb696afc23fd928e4d78c8fe
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Oct 2 04:19:03 2005 +0000
+
+    Translate strings (with copy_xlate) in getconf.
+
+commit dbdc7af1e4e2cb70dce995f507af7f7df1ecb25e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Oct 2 04:18:21 2005 +0000
+
+    Added an alt_slurp function, which runs slurp a second time on the
+    altpath if the normal one fails due to a non-existant file, and use it
+    in the getconf function.
+
+commit 30a6a3c94b5637e87cae2065bd1fa218034ff616
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Oct 2 04:08:00 2005 +0000
+
+    Moved the functions to create and open an alternate-path filename (based
+    on the value of "ezmlmrc" plus the filename) into a separate module.
+
+commit c6cae2883379ae950cfe11096d95abd3b6b638fc
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 21:03:30 2005 +0000
+
+    Since set_cpouthost is now always used with &outhost, and set_cpoutlocal
+    with &outlocal, drop the need for those two functions completely.
+
+commit 8e2fce2aea1d1c721778fddcca33733dfd8609ab
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 20:51:42 2005 +0000
+
+    Build the language-specific ezmlmrc directly into the lang directory,
+    and skip adding any additional files (ie mailinglist or charset).
+
+commit 6b0d413c9dae8ac18380fa2fa38668f87440a1a9
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 20:08:21 2005 +0000
+
+    Adjust the tools and tests to accomodate the new text file structure.
+
+commit bcba890593378a743d61081d6bc241ceefcb79eb
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 20:07:33 2005 +0000
+
+    There is no longer any need to build the ezmlmrc target.
+
+commit 5646aa62973f3b0fd9369b5f8d1d831edef90bef
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 20:06:51 2005 +0000
+
+    Build the language-specific ezmlmrc files into the lang directories.
+
+commit 07a666e5d881831d6d8fca29a8bb24e0f88c620a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 20:04:13 2005 +0000
+
+    Move the text files back into subdirectories of lang
+
+commit f4d4304b3fd9ec59d78ec5d58c62ab5840f71d5d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 19:55:17 2005 +0000
+
+    Reorder fetching "ezmlmrc" and "mailinglist" in load_config, so that a
+    default value for "mailinglist" can be loaded from the ezmlmrc directory.
+
+commit ce66c5070ba131019f688a5b68a818ad79c36190
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 19:54:07 2005 +0000
+
+    Flipped around the use of outlocal and listname, and outhost and
+    hostname, to keep outlocal and outhost constant.
+
+commit c7b4900042f0ef3069ab58accc4daf1b831bfaf1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 18:41:31 2005 +0000
+
+    Fix a typo in ezmlm-clean.c, setting outhost to outlocal.
+
+commit 25c8df524cf278cab037ed9f1ccf0395fe2b74bf
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 18:39:42 2005 +0000
+
+    Export the new translation function, copy_xlate, in the copy.h header.
+
+commit 228955b54341bf6cc6255d57594ea2e19a6aaed8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 18:32:55 2005 +0000
+
+    Move the data output cals out of the translation function in copy.c.
+    This makes it suitable for calling from other parts of ezmlm-idx.
+
+commit fd804e7ceba4ec1f4298b62e14c78fef17e9ea5b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 18:31:16 2005 +0000
+
+    Commit defines needed for recent ezmlm-make changes.
+
+commit 501b23b9f5fb1c84a97dd63c3a9d3fc211aa6c96
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 18:30:57 2005 +0000
+
+    Fix the logic in ezmlm-make regarding when to load the template file
+    from the saved path (in either DIR/ezmlmrc or DIR/config).
+
+commit a83c3ba85ef03090c930e31e7ff951f3a8349f47
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 18:17:47 2005 +0000
+
+    Move the <#?#> translation code into a separate function.
+
+commit 5f886485d2a4f0a12540be3b87543f1f9e5230ab
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 18:04:55 2005 +0000
+
+    Also substitute <#H#> in copy(), to help handle older templates.
+
+commit d78c7d1e8f67ff7be3cbd1bbf289d436066fcead
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 05:12:21 2005 +0000
+
+    Make ezmlm-make look up files in the directory given for -C,
+    including the ezmlmrc file.
+
+commit 95bf31713aeb71224c3370463c124ac16f659232
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 30 04:45:26 2005 +0000
+
+    Dropped the "language" configuration file in favour of treating the
+    "ezmlmrc" pointer as a directory in which files can be found.
+
+commit beb09bc0ec1ecb15f1dee8ac5164424214c99bc4
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 29 21:55:34 2005 +0000
+
+    Added temporary version tag to HISTORY.
+
+commit 37c9f6b891f7855c8bc0f392930d3ed945536ba2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 29 21:47:00 2005 +0000
+
+    Fix support for targets in subdirectories.
+
+commit 74cbc30fdde45b2b6e941d5673351dd678da2ab8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 29 21:46:25 2005 +0000
+
+    Added script to test building the distribution tarball.
+
+commit 4cd2781621eedd18f348b52e013337b20ed36697
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 29 21:39:16 2005 +0000
+
+    Adding a "text" directory is still required to support editing texts.
+
+commit 1af73a00093a36c88fe2e81e158f482f8af479c1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 19:57:40 2005 +0000
+
+    No need to create the "text" directory any more.
+
+commit fbc19f53263b01ff433fe376e843b4bef9f6f9f0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 19:56:47 2005 +0000
+
+    Added some simple tests for string substitutions in copy().
+
+commit 558514ec9dc2f0e45af31ce1a134871727dd50a7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 17:45:51 2005 +0000
+
+    Fixed typo in script to generate the ETC file.
+
+commit b75ec91c06b822bec4f89a46922c7f8c7395382d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 17:19:34 2005 +0000
+
+    Several changes in building the distribution tarball:
+    - Include "text" files.
+    - Revert all conf-* files to their default values.
+    - Skip the svn commit check.
+
+commit 88e4b80de236551910a8bcaae3a5fb9694a3a75b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 17:16:53 2005 +0000
+
+    Use the listing of "text" subdirectories to automatically generate the
+    list of ezmlmrc files to build.
+
+commit 0f0180d5c29aaf16868f1a50c71ae31b76d6af16
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 17:16:07 2005 +0000
+
+    Added a "conf-lang" config file to replace the "make ISO" mechanism.
+
+commit c9e5e1bcb76e92b8de8869f214f4ef3c532e37e6
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 16:43:31 2005 +0000
+
+    Added missing files to ETC caused by running tools/makeETC before the
+    "text" subdirectory was fully populated.
+
+commit 1735e7185024645ed1caa9d64b64626da2899439
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 16:09:34 2005 +0000
+
+    Bumped version to 5.0.0, this IS a major set of changes.
+
+commit c0f53b7b3cdbec1752d06e278510ace61276c7ad
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 15:56:42 2005 +0000
+
+    Added some notes about conf-etc and tidied up the changes.
+
+commit 800bbe2a24c715f59be34272309199314fed2eff
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 05:06:06 2005 +0000
+
+    Removed the last hard-coded /etc/ezmlm found in the EZ_CGIRC constant.
+
+commit 69eb6b99ff589ec9c0476a386643fce380eec360
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 05:05:28 2005 +0000
+
+    Set up conf-etc before running the test script.
+
+commit a66d1ff085cf5c507729d15790afc46f159b934d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 05:04:38 2005 +0000
+
+    There is no longer any subdirectories of "lang", so fix up scripts to match.
+
+commit 359f9781a2c5dad7c79f1cdeac5980e1022a3a63
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 04:42:02 2005 +0000
+
+    Forgot to include "auto_etc.h" in previous patch to ezmlm-make.c
+
+commit 3d448628f474fecfc716607153891bbc77e5c84b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 04:41:07 2005 +0000
+
+    Eliminated TXT_ETC_EZMLMRC constant, which had a hard-coded /etc/ezmlm path.
+
+commit 578882e2bfebb7284e747207cd90e5d29247ed85
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 28 00:06:21 2005 +0000
+
+    Since the language subdirectories now only contain one or two files,
+    I've merged then down into the simple flat files they were before r412.
+
+commit 076f2bad3399783436e7423b5f0d9224280940c5
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 27 23:53:51 2005 +0000
+
+    Moved the text files into their own directory, removing them from the
+    generated ezmlmrc files.
+
+commit 7f8d2957eb51dc2ad116d3090df2b996e32722cd
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 27 23:51:24 2005 +0000
+
+    Ignore '#' lines, just like ezmlm-make does.
+
+commit 4bdd9bdc89a5b419ed91b7396cc0b88fd07046ed
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 27 21:35:39 2005 +0000
+
+    Fixed compile warnings on install.c
+
+commit 49eec518fc890feafdd7b775e8fa54743b7b8d5d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 27 21:01:09 2005 +0000
+
+    Add all the text files into the installed ETC directory.
+    Still need some way of setting up the "default" symlink.
+
+commit 99b5f7363543b4b7ee34f99dbd168a1a4d1c1736
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 27 20:37:55 2005 +0000
+
+    Fixed a bug in the most recent patch to copy.c, where the result from
+    str_start was used the wrong way.
+
+commit acfbca201d6a44e3d1fd46ab8b968b42ab49792c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 27 18:14:10 2005 +0000
+
+    Modified copy() to load text files from /etc/ezmlm/LANG/*
+
+commit 97de73824adaf20220924844be72274845ee7cd1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 27 17:36:42 2005 +0000
+
+    Moved the installation of the ezmlmrc files into their own ETC file list.
+
+commit 2163dd3e6daa53b2fad0652c47195d26f66d1208
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 27 17:35:11 2005 +0000
+
+    Added a config file intended to replace the hard-coded value of /etc/ezmlm
+    The use of this hard-coding needs to be fixed still.
+
+commit fea365a890534aa1a811c6c4baa5713311c664c1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 27 16:46:02 2005 +0000
+
+    Substitute <#L#> at run time.  Unfortunately, ezmlm-make also
+    substitutes <#L#>, so this cannot have any effect on text files created
+    through ezmlm-make.
+
+commit 3ae92bdaca97fc9d42b94f10ff5d7616c38a13be
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Sep 26 22:25:39 2005 +0000
+
+    Copy the value of "outlocal" (which is changed by several programs to
+    include -digest -allow or -deny) into "local" which will not be changed.
+
+commit a97dae27502ed5301b21468ce46983ebecde2713
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Sep 26 22:06:21 2005 +0000
+
+    Expanded the ezmlmrc documentation of what tags are substituted.
+
+commit ed7f1ba758dc78b589e7702d83dd4d7b6ca33c7d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Sep 26 20:57:22 2005 +0000
+
+    Fixed some missing <#H#> to <#h#> tag conversions missed by the last commit.
+
+commit 88cf136c2b44415631ba76dfdca160c48b0ba152
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Sep 26 19:28:43 2005 +0000
+
+    Converted <#H#> (processed by ezmlm-make) to <#h#> (processed by at run
+    time) in the text files; one of the steps required to make them fully
+    dynamic.
+
+commit b6577668b6a7b15510dfc6a6220ca1bb20c536da
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Sep 25 23:12:01 2005 +0000
+
+    Added note about adding standardized hooks.
+
+commit c1287521b3a0578ddc701dbaa4d2844494390b04
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Sep 25 23:11:27 2005 +0000
+
+    Added a "language" configuration file.
+
+commit 396f1559b396f0f3d445e80860f55cc684869c03
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Sep 25 22:39:19 2005 +0000
+
+    Switched the tags in all lang/*/text:* files from <?#flags?> (which was
+    processed by ezmlm-make) to <=flags=> (which is now processed by the
+    copy() function).
+
+commit a4ffec5436faa3ae8aaaecda747e9a76a8508d9b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Sep 25 22:04:29 2005 +0000
+
+    Modified installer to accept an optional source filename on lines.
+
+commit bf7e5aaec8ed8a82a69b119478c858936d2ca8fa
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 22 20:56:35 2005 +0000
+
+    Modified the "copy" function, which translates from "text" files into
+    output emails, to also select sections at run time based on the list's
+    configured flags.
+
+commit 312eba017cda296a16f18c6e264bbe2c3c851a26
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 22 18:27:56 2005 +0000
+
+    Made a bunch of variables in ezmlm-make static so they don't conflict
+    with same-named variables in libraries.
+
+commit 831fa96b6ab5ee1aa930425c42c2eecb003b1dfd
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 22 17:03:12 2005 +0000
+
+    Replaced the use of the "config" file in ezmlm-make with individual
+    files containing one setting each.
+
+commit d6028523ec1e81e3542f61467c59bf2748a125cc
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 20 23:44:08 2005 +0000
+
+    Switch from using str_chr (and related) to byte_chr in ezmlm-make on
+    stralloc strings, since such strings have externally bounded lengths
+    instead of needing to rely on internal NUL byte bounding.
+
+commit ca95e092dcc4e6ab376d807521cb92c8df05734a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 16 05:36:48 2005 +0000
+
+    Converted several command-line holder variables from char* to stralloc,
+    which simplifies the config loading process and eliminates a few other
+    variables.
+
+commit c67995a30fa5f989bc28bfea5d5b5ec29dcea61c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 16 03:59:31 2005 +0000
+
+    Moved reading the config into a separate function.
+
+commit 5171a3198f95df71515c7bacc492250e713ac1bb
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 15 17:55:56 2005 +0000
+
+    Use (s)getopt instead of had-coded option parsing in ezmlm-receipt,
+    ezmlm-return, and ezmlm-split.
+
+commit 7f8586fcc7453fd60b718dc082863548c6dea2ce
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 15 05:40:33 2005 +0000
+
+    Moved loading and parsing of the "charset" control into load_config()
+
+commit a8607989faaffb8bc8d28b565f6d663166a8b6c1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 14 22:21:02 2005 +0000
+
+    Moved loading of four config files into common load_config() function:
+    mailinglist, listid, outhost, and outlocal.
+
+commit edf6f56fd781f3a45f7c150bca60f3237a4865ce
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 14 17:11:31 2005 +0000
+
+    Added a header to the test script.
+
+commit c1b637b5c05c943f69fd3f27af9a7c4938d8e7e0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 14 17:11:04 2005 +0000
+
+    Moved loading of the "key" file into a common load_config() function.
+
+commit 5a075c868c24653e28ab96d52f28a43e10685b6d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 14 17:10:21 2005 +0000
+
+    Added a makeall tools to build all three database configuration options.
+
+commit c8b99742f37b91094da59295df51874cbd13efd5
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 14 17:06:42 2005 +0000
+
+    Merged rev 406
+
+commit 61f2486075c7b077eacf8ff0424e507886c22def
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 14 05:46:15 2005 +0000
+
+    Moved the common chdir(dir) code into a common function.
+
+commit 0d0878e4937ab574ca57720ae110b332fc4ab77d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 14 05:34:09 2005 +0000
+
+    Since lang/$lang.text no longer exists, depend on the directory instead.
+
+commit 1b23270b48f6646498652509018134df881bbe7d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 14 05:33:46 2005 +0000
+
+    makelang.sh had a bug that was not caught before the commit -- it
+    checked for the presence of lang/$lang.text as a file instead of
+    lang/$lang as a directory.
+
+commit d8689949998069ed34c2a05e36b177f5e22b3ae9
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 14 04:54:20 2005 +0000
+
+    Revised the checklangs tool to look for missing translations, and
+    improved its message output.
+
+commit 8145b48831e981ce727c7a063edcdae426aa99f0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 14 03:16:57 2005 +0000
+
+    Set "executable" property on two tool scripts that were missing it.
+
+commit f31459763543a10e0426eba050fa7b5ff0020c0e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 13 23:25:51 2005 +0000
+
+    Added a tool to check for language files that need updating.
+
+commit 2ba2ae6866304470f9308fc0fc2c50626467978a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 13 23:14:39 2005 +0000
+
+    Bumped version to 0.450
+
+commit 2a083bf5056775749f82d6a3d22cf49761cdfeb3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 13 23:13:02 2005 +0000
+
+    Adjusted all the datestamps to add dashes between the YYYY/MM/DD components.
+
+commit cc1ed165b9abe9c94e4c63fce8e3175e839e095a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 13 23:11:41 2005 +0000
+
+    Removed the TODO note about breaking up the text files.
+
+commit 500e85242c5efce3f1d9327752cbde264d1e773d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 13 23:04:31 2005 +0000
+
+    Broke the ezmlmrc text files into separate files internally.
+
+commit 9779213e2da9ad0a76554dca9ff28661968b76b6
+Merge: 27b768c... 734314f...
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 9 21:59:03 2005 +0000
+
+    Copied the stable 0.44x branch to trunk, to provide a clean re-start to
+    the trunk.
+
+commit 27b768c32b857a96b166ba9d375c8facac506f77
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 7 16:03:30 2005 +0000
+
+    Added a pseudo-hostname to the test commands.
+
+commit 920479ab6495084f5948ab63a23c547dcc17751e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Sep 7 03:37:02 2005 +0000
+
+    Since the usage says that only a single subdirectory is allowed, only
+    look for a single subdirectory (ezmlm-sub/ezmlm-unsub).
+
+commit 81f75890262f0e0377ad27d288fbbf7ed6995d9f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 6 23:49:41 2005 +0000
+
+    Modified ezmlm-sub and ezmlm-unsub to accept an optional "subdir"
+    parameter on the command line.
+
+commit 21cc312e92a5a62d351a5e4ab2feddb30ee1407a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 6 22:27:55 2005 +0000
+
+    Fixed a typo in the ezmlm-gate man page.
+
+commit ddfc49bd46c9ff426f64f16240e3cb31dbc3a4cf
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 6 22:27:21 2005 +0000
+
+    Modified ezmlm-list to take a subdirectory parameter.
+
+commit dfd4cc0dcc62c801bc67778a8263861815c9551f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 6 15:16:25 2005 +0000
+
+    Fixed up some anacronisms in the second ezmlm-make test.
+
+commit 718a4f0f22fe07e50d1a8e4d41cc3330e480dbe1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 6 06:22:16 2005 +0000
+
+    Updated the usage of psql (-u vs -U) in the ezmlm-mktab comment.
+
+commit 7335faee7c1b33f2d084bca185e3c08df213b5e4
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 6 06:21:41 2005 +0000
+
+    Make ezmlm-gate take moderator subdirectory names instead of full paths.
+
+commit ef7174fcd97a823e6a9dd0e22e7e1343f90837e2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 6 05:15:37 2005 +0000
+
+    Modified ezmlm-issubn behavior to explicitly expose the subdirectory
+    name.  This is the first of several significant external changes aimed
+    partly at eliminating all "sql" files except one.
+
+commit 650652e03f09c3015c639102687349b4dcdf3fcf
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 6 05:12:43 2005 +0000
+
+    If subdir is set and not "." in parsesql, use it to modify the table
+    name instead of the directory name through std_makepath.
+
+commit dd13a18cff4e31ff140bec6bdaee07bc53dcfb5e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Sep 6 04:41:33 2005 +0000
+
+    Treat a subdirectory of "." as equivalent to no subdirectory in
+    std_makepath.
+
+commit 734314fae21c7be3448a9d7cbd1cc70eed497ff2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Sep 5 21:00:47 2005 +0000
+
+    Added 0.44 stable branch.
+
+commit 05b16a2f46bb1e6fec319363db09edc00fcd020b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 1 22:58:49 2005 +0000
+
+    Stamped version 0.443
+
+commit a28ca3046a5a08895a123940918afa4b42a33f63
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 1 22:47:19 2005 +0000
+
+    Added note about internal changes.
+
+commit dfaea95909deffbededa30a08e842364ce55feea
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 1 22:05:08 2005 +0000
+
+    Fixed some old comments in the documentation.
+
+commit 0d42e607912c6f94fb427256fb7e1dd01b4002fd
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 1 21:44:22 2005 +0000
+
+    Fixed the marker logic in ezmlm-moderate to allow comments between any
+    two lines containing "%%%", not just lines 8 characters or longer.
+
+commit f6314d4361b4ca4afe2ec24225665aeff6a4a401
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 1 21:37:08 2005 +0000
+
+    Simplify (eliminate) the repeated "export" statements.
+
+commit a7c25d5d3c6c99fef82b08569f80f06748bd9736
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 1 21:09:32 2005 +0000
+
+    Simplified quoting of "${ERR}" to just "$ERR" (and same for $TMP).
+
+commit 94c47e27fcc36b83ba0de4e4dcb6dd11415439d1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Sep 1 21:07:50 2005 +0000
+
+    Simplified the test cleanup by putting "dot" inside the list dir.
+
+commit 4b32ba18fefc7626037428d54256e4acbba0913a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 13 07:34:20 2005 +0000
+
+    Further simplified the tests, removed some unused vars.
+
+commit 99e6e41cb4788c8567c451615d5d8015bde53489
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 13 06:40:11 2005 +0000
+
+    ezmlm-test no longer needs the "manager" file to be tweaked.
+
+commit ee7e02ca8554b0a19435ad41886f5ae8cc3d2517
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 13 06:39:45 2005 +0000
+
+    ezmlm-test no longer requires EZVER to be defined.
+
+commit 67dadd75f82ff6e5fbef16197af79712e4f0984d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 13 06:29:08 2005 +0000
+
+    $USER-__tstlist is defined as $LOC in tests
+
+commit a766e9e80cbea020fd6b5a7cbab7fe88469ad64d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 13 06:27:53 2005 +0000
+
+    The ezmlm-manage tests don't really need to depend on $USER.
+
+commit 0d7793c11eff257714463e315b983dc4d17518a2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 13 05:06:46 2005 +0000
+
+    Don't need to create maildirs for qmail, or to fix up .qmail files.
+
+commit f74fddf4aadc355e34091a06e6ef8073c5d34247
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 13 04:57:49 2005 +0000
+
+    Removed support for old versions of ezmlm-idx.
+
+commit 38ad2f7c99125cb8678f83aff8f43605d3ce285e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 22:33:57 2005 +0000
+
+    Added a "subdir" parameter to all subscriber database function calls.
+    This parameter is currently unused, but will be used to select between
+    the standard, "allow", "deny", "digest", and "mod" databases.
+
+commit 4fd8bdc9a0c5f34891fffbae38466d465a514232
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 20:15:06 2005 +0000
+
+    Moved the "table" parameter from the parsesql function into the struct.
+
+commit 981047a1dfee8b9778b7da4e1c9180ecc8490931
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 20:14:17 2005 +0000
+
+    Hacked away a nagling pointer qualifications warning.
+
+commit 5931d9264d51aabf8d4579e69a81ac92a918a082
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 19:40:09 2005 +0000
+
+    Added testing wrapper tools.
+
+commit 7b3af99f95d457d9b1ae85f3ee79b6bd9415db18
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 06:52:40 2005 +0000
+
+    Fixed a remaining signed/unsigned issue.
+
+commit d764ade89fbd6faf1cc49684c70e7a9cceac2272
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 06:27:47 2005 +0000
+
+    Stamped version 0.442
+
+commit 8fd0c60403d867d4948d21245ed8d24722e9fc07
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 06:27:29 2005 +0000
+
+    Fixed some signed/unsigned comparison issues.
+
+commit e21c72fed7c4fecf8c07b586edf0d9b214ce5772
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 05:49:07 2005 +0000
+
+    Added warnings for unused parameters.  This resulted in a few
+    simplifications and a couple of bug fixes.
+
+commit e084fe857f7c108976d995ec604c490d45232f2c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 05:34:29 2005 +0000
+
+    Merged all instances of qqwrite into a common qmail_copy function.
+
+commit c9cf771d8ce5a0eb43ee45a058fb16f27385989a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 02:56:23 2005 +0000
+
+    Removed unused "charset" parameter from "decodeHDR" function.
+
+commit 36f6fef1d6d35e2e95ae51db1b9d65adb3cdef58
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 12 02:10:39 2005 +0000
+
+    Removed the unused "dir" argument for std_checktag and std_tagmsg.
+
+commit b51296f8265ceaf973d7865ac6a5efbab651e52c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 11 22:22:33 2005 +0000
+
+    Added -Wall to the gcc flags, and fixed all the warnings that resulted
+    from the additional checks.
+
+commit 9b00d8c72546d0058fa3a2c248ea4e2bf13d27a0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 11 22:21:48 2005 +0000
+
+    Mark cgierr function as "noreturn".
+
+commit b3c527b3f619260c88db7241627b4323d70f2c25
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 11 20:45:56 2005 +0000
+
+    Fixed bug in ezmlm-request handling of multi-line subjects.
+
+commit 78174cad8fa28f400867db90073176e73a03342f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 11 18:44:45 2005 +0000
+
+    Fixed odd problem with usage of "len" in qmail_puts.
+
+commit 4182844d41ed6ff501d2f24b4e83b3fc92f58579
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 11 17:08:24 2005 +0000
+
+    Added a "noreturn" attribute to "die" functions that never return.
+
+commit 1bd626b5dfe9bc2d80d5a5358c8af8d95ec62e2a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 11 16:49:20 2005 +0000
+
+    Added some more warning flags (-Wmissing-braces -Wparentheses) and fixed
+    the resulting compiler warnings.  Some of the fixes resolved some latent
+    bugs.
+
+commit 50111740c88ba90833804f9624bad459d2764df1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 11 05:07:29 2005 +0000
+
+    Added a "sql" file in the "LIST/mod" directory on creation of lists.
+    This fixes a long-standing bug where moderator addresses are not stored
+    in SQL.
+
+commit dd1fad4b551dee66c156162723f9c3be8caba5b1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 11 04:01:31 2005 +0000
+
+    Sorted the file install lists.
+
+commit 4c5eba78863df43b1388a5c0f36018b0ecf8a26e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jul 7 23:38:54 2005 +0000
+
+    Added the missing Id tag to this file.
+
+commit 194856af53ec8d869176b990f8b6b0c5e236ba83
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jul 7 23:35:59 2005 +0000
+
+    Merged the five instances of the code for calculating the subscriber
+    hash number into a single function.
+
+commit dc1af241b9f79af517b22b9a09fe3c754b7d229a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jul 7 22:09:56 2005 +0000
+
+    Added a "makerrors" make wrapper script to filter out the most common
+    (and unlikely to be fixed) make warnings.
+
+commit 8e48e55ff89bb342c158682ad8b38c57f28c1f0c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jul 7 19:15:07 2005 +0000
+
+    Added note about pgsql bug fix.
+
+commit 2e87ee45e1d86bc43ef96dfb34f389e2a083cb1b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jul 7 19:13:20 2005 +0000
+
+    Fixed bug in PgSQL query in searchlog function -- TIMESTAMP cannot be
+    converted directly to INT8, instead use "extract(epoch from field)"
+    function.
+
+commit 927474cb3ee26645e6fa1541e5fa5cb73ba6dd56
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jul 7 16:25:39 2005 +0000
+
+    Fixed bug in *SQL tagmsg functions, since the msgnum is no longer being
+    created in the same method since the standard code was broken out.
+
+commit 5004086c47c216b4358cd171efef0c070f1bf56f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 6 07:24:28 2005 +0000
+
+    Broke out the standard database handling code from the SQL code, as the
+    core code was repeated in each sub_* directory (a total of 3 times).
+
+commit fda7c15ba1eb0a49baf598b308c58514cea0cc3b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 6 05:30:29 2005 +0000
+
+    Simplified parsesql on the basis that *table is never set before calling
+    by opensub.
+
+commit 473efc3c6908027b25b36c171b7b939324aeb19f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 6 05:02:20 2005 +0000
+
+    Reversed the order of -l* and *.lib on the link command line in default.do
+
+commit 4e20dd08ead89f29cbe93f72e895638a965327f5
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jul 6 04:58:26 2005 +0000
+
+    Simplified the subscribe and issub functions by removing the unused
+    table override parameter.
+
+commit 660080119bc6c6269c99d48ba06dd6abdb4019b1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 5 18:07:34 2005 +0000
+
+    Moved all objects into an all-encompasing libezmlm.a library.  This
+    simplifies moving functions around within libraries, as well as opens
+    the possibility for a shared libezmlm, thus reducing the total
+    executable size.
+    
+    It also happens to reduce the actual code size right now, since several
+    unnecessary objects are no longer linked into programs.
+
+commit 7642b303383b6113c1e4353e3fe423d31cd39496
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 5 17:56:46 2005 +0000
+
+    Fixed a minor typo in handling of *.lib type dependancies.
+
+commit db18c05cd0a7f3cbc6e02f39ee057ddd576b9d5c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 5 17:51:13 2005 +0000
+
+    Modified the library handling in default.do to allow for "-l" type
+    libraries in the current directory.
+
+commit 86f16b75c05b3d5d8a8140e930c2dd899f7fd53b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 5 05:27:51 2005 +0000
+
+    Made "die_read" function static, to ease future linkage issues.
+
+commit 12b954cf2ecde084b0e017255f9e50ed7355fd03
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jul 5 05:11:44 2005 +0000
+
+    Make die_write in ezmlm-list.c static to ease future linkage issues.
+
+commit a41d7dae82d354f172e72bc7d5f0a94a045ae812
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 4 22:32:49 2005 +0000
+
+    Renamed "opensql" to "opensub", and "closesql" to "closesub", both for
+    filenames and function names, since the function has more to do with
+    opening a subscriber database than opening up SQL.
+
+commit 3c72be0ac2f5e5b24e68ccf267cf94ada697b11c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 4 21:49:07 2005 +0000
+
+    Stamped sources with version 0.441
+
+commit 66bf2701ed76b4cc4f323be7cb6edf286d826c97
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jul 4 21:46:42 2005 +0000
+
+    Put a valid recipient into the To: header in moderation messages.
+
+commit d7cf182820d3ceaa8aa9274b2b8f893cd7fad57d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 22:27:42 2005 +0000
+
+    Check the value of conf-bin, as some tests will fail if it is not set
+    properly.
+
+commit fa1f03cade4850c30903a90c051a44f93974fb1a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 22:20:58 2005 +0000
+
+    Updated the manual page for ezmlm-test to match the current behavior.
+
+commit 1ce242f241808785b6b803c69cee70bf3c1e080f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 22:15:59 2005 +0000
+
+    Simplified the SQL user configuration by eliminating the -l option.
+
+commit ccc8359e4a85da3b38778552e71ca4a9c225c793
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 22:06:11 2005 +0000
+
+    Removed the options to restart tests at a particular section, as that
+    distinction is no longer relevant.
+
+commit c3e2e546f4b999da8e003a212f58d565e53a64dd
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 21:57:21 2005 +0000
+
+    Split the very long ezmlm-get test set into four logical parts:
+    index, get, thread, and digest generation.
+
+commit 8432ef9b14a082b29bc73eebecc1612c877cddc1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 21:09:50 2005 +0000
+
+    Merged two ezmlm-warn tests together.
+
+commit 94a3a567a2a7920a017eaeb4c8c03682635058da
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 03:23:43 2005 +0000
+
+    Fixed the prompts in the format tests to line up with the other prompts.
+
+commit 9f35dd5654227b5a58b180b1eee8afbf65a17646
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 03:18:40 2005 +0000
+
+    Switched to a generic hostname in tests, since it's never actually used
+    externally.
+
+commit b115e0b1b721b9c7cb99ffd112f374f1177e6157
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 03:16:07 2005 +0000
+
+    Inverted the meaning of the "noself" bug, to eliminate the nuisance
+    message on every ezmlm-test run.
+
+commit 3ba7e3a17ef9f32845fb8960400415fe8dc0499f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 02:00:18 2005 +0000
+
+    ezmlm-test no longer requires having QMPATH added to it.
+
+commit f656fba46909cf96fc21253678a140d8eb0b55d7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 30 01:58:45 2005 +0000
+
+    Simplified a bunch of quoted variable oddities.
+
+commit a55dd0180153d5d670348518a9884bee53730349
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 23:58:50 2005 +0000
+
+    Cleaned up (removed) some qmail/eztest dependancies.
+
+commit 8ba8f819c76ab5e1b401e21db74092162e4eba0d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 23:54:14 2005 +0000
+
+    ezmlm-test can now be run by any user, in any writeable directory.
+
+commit e0ae4501c83a1ff19d44fb4ac2151cbde65ba740
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 23:40:48 2005 +0000
+
+    Set $QMAILQUEUE globally, and so skip calling qmail for anything.
+
+commit b7124626519f8f6259b8b22b419cb43187196da2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 23:27:44 2005 +0000
+
+    Merged the two ezmlm-request tests together.
+
+commit 65dbb807f679c4c9b775defaa96bb9b258f2a008
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 23:20:00 2005 +0000
+
+    Merged parts of the remaining two ezmlm-manage tests together,
+    eliminating the last qmail send/wait pair.
+
+commit 49e2f5771fba95a00759679f133b2702af5ab3a3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 22:41:15 2005 +0000
+
+    Merged two more parts of the (growing) ezmlm-manage test sets together,
+    eliminating one more qmail send/wait pair.
+
+commit b0c0592654c3b6f7043136b801ce97c177ba6c56
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 22:18:54 2005 +0000
+
+    Merged two of the ezmlm-manage test sets together, which elimiated one
+    qmail send/wait event.
+
+commit 006f740275b08579ffa03436be3f97bd452be65f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 22:12:37 2005 +0000
+
+    Moved the set/unset QMAILQUEUE lines into functions for convenience.
+
+commit b610a6c8f978ff3a0cf3952b3f3d82dd36764250
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 22:06:27 2005 +0000
+
+    Merged the two ezmlm-moderate tests together.
+
+commit b08dea17a7e293f9cf36cdc7b1b317f0f38d741d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 21:02:28 2005 +0000
+
+    Merged the two ezmlm-split tests together.
+
+commit 823eb69475a2188e8b54b80b02b274b8156f9514
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 20:36:33 2005 +0000
+
+    Merged the two ezmlm-get test sets together.
+
+commit eab16f3d5efac07e7a10cc0486c3976f95b098c6
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 05:52:28 2005 +0000
+
+    Fixed all the test scripts to use the existing variable ${TMP} instead
+    of its value of ${DIR}/__tmp
+
+commit 6832b7afa0ad81936214ba3394e603fcbed9d20d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 05:48:44 2005 +0000
+
+    Fixed typo in qqtest script that prevented it from creating multiple
+    output files.
+
+commit 6547f8fa8e40d1be76b1c247ad2802f0d15ed826
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jun 29 05:26:15 2005 +0000
+
+    Merged the two ezmlm-clean test sets together.
+
+commit 6ff934185e429ffe88dd2756292f76ee98175229
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jun 28 21:14:47 2005 +0000
+
+    Merged the two ezmlm-store tests into one unit.
+
+commit 16dab1060f2201506e64e65a0104bbb189f97ab2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jun 28 21:07:13 2005 +0000
+
+    Reverted the previous change to ezmlm-send tests, as it breaks other tests.
+
+commit 27e6e0f2a188f588ff4abe3d0a8f5f02eb343245
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jun 28 20:17:47 2005 +0000
+
+    Simplified the ezmlm-send tests by skipping adding the X-num: header.
+
+commit 1451abf9fdad9a2b5b368569f477fd6e587d7703
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jun 28 20:15:24 2005 +0000
+
+    Merged the two ezmlm-send tests by skipping passing messages through qmail.
+
+commit dbe85cf85ddd1f3583cdff9573c8623768383d82
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jun 28 19:58:32 2005 +0000
+
+    Converted all remaining ${ECHO}+exit 100 instances to use fatal.
+
+commit b14fdfc6d56bee2a72ffeec0ce48c799698aff4f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jun 28 19:36:08 2005 +0000
+
+    Moved all the functions into 02-functions for real.
+
+commit 120dcc9ec4cbf7624e193744bf3c59e1ef22f70c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jun 28 19:19:37 2005 +0000
+
+    Moved the repetitive sequence { ${ECHO} "something"; exit 100; } into a
+    function "fatal".
+
+commit 0d35cdf9539beae19f836a29e29bd59f2793b11a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 24 05:27:12 2005 +0000
+
+    Don't clobber msgsize file on re-make.
+    Thanks Stephen Quinney <stephen.quinney@computing-services.oxford.ac.uk>
+
+commit 340dec4fd66e252f39e56279c61736f293c30d53
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 24 05:21:19 2005 +0000
+
+    -Fixed readwrite.h to work on LP64 systems.
+    Thanks Amitai Schlair <schmonz@schmonz.com>
+
+commit 9bc21beab4baacc9fbfb574ab9a088e299aa0d82
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 23 23:16:58 2005 +0000
+
+    Merged the common code from sub_*sql/opensql into a single source.
+
+commit 6c4069b3a2713fc9a9c0c974f75a4a19c503c00c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 23 21:40:43 2005 +0000
+
+    Removed unnecessary variable ptable in sub_mysql/searchlog.c, which only
+    ever pointed to "table".
+
+commit 664230743bffae4d24323b91b5e1a337b9b6f778
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 23 06:23:02 2005 +0000
+
+    Fixed critical one-off bug in both *SQL configuration parsers.
+    Thanks Jim Winstead <jimw@mysql.com>
+
+commit 2441817feac1f41635d56fc90359edfd734b0a71
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Apr 28 23:53:52 2005 +0000
+
+    Moved several die_* functions into a library.  More may follow.
+
+commit dd913e6ddafe7b64e7355f2006494b2dc3e4fe11
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Apr 28 21:24:56 2005 +0000
+
+    Fixed up function prototypes, adding a few const*s.
+
+commit 60524175a40758ae16627238a88f38519a5407da
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Apr 28 19:39:50 2005 +0000
+
+    Fixed up some function prototypes and const char*s.
+
+commit c7326e652fac0dc325ee85c169a6a341a61cc766
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Apr 28 00:24:14 2005 +0000
+
+    Updated ezmlm-cgi to generate valid XHTML/CSS output.
+    Thanks Brian Ghidinelli <brian@vfive.com>
+
+commit d5743bceda519b9604c2ff69580e8a4e9f78f17d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Apr 18 23:19:42 2005 +0000
+
+    Tidied up a couple of line break oddities.
+
+commit c01df93fd618069ee319ad8b9a80db26ca8ff26e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Apr 18 23:19:09 2005 +0000
+
+    Fixed up formatting of the command format line.
+    Using .BR removes spaces from the result, so it needs to be replaced by
+    manual \fR and \fB escapes.
+
+commit bc08c37a29958619a9e5669afc09ec22998381af
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Apr 18 23:15:08 2005 +0000
+
+    Document the -F/-f flags in ezmlm-reject.
+
+commit 3b17083bf6c839fc1b390503514f21973b02c21d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 20:51:57 2005 +0000
+
+    Fixed lack of quoting in PgSQL subscribe code.
+    Thanks Dan O'Neill <doneill@trusonic.com>
+
+commit 225e791abcaf6b9c82eb6eb3f6f1ea8e33fdbcf1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 18:52:40 2005 +0000
+
+    Fixed extra "fatal" parameter bug in previous merge.
+
+commit 6633c2d45e2013680e27fc69862f04f701c91e80
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 18:47:48 2005 +0000
+
+    Merged revisions 246:253 from branches/0.43
+
+commit 87406b45d03ffdef774bcfd92f722c5b7064544e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 18:33:41 2005 +0000
+
+    The target list needed "setup" in place of "install"
+
+commit 92f9c365689dfe62107d2bd98440584aefa00c9c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 17:56:02 2005 +0000
+
+    Added generation of FILES.idx to the makedist script.
+
+commit 674d456a52833ca824cb3f8c7d35c5afd34dfad2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 17:49:34 2005 +0000
+
+    Stamped sources with version 0.440
+
+commit e8c8af1e1ce4e7e530d25c58842aa4ea8896ede8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 17:49:00 2005 +0000
+
+    Added several header files that are now effectively replaced.
+
+commit 204d0ce55b6153dc88808a0bf177ca5f43ce4881
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 17:46:27 2005 +0000
+
+    Moved the makemake and makepatch scripts into tools.
+
+commit 09e80dfa97bc6fd889b96429a0aa4a8ff5976174
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 17:44:01 2005 +0000
+
+    Added script for building the distribution tarball.
+
+commit 242b1c27096757c3d2d28ad12bf3b0258a68a95a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 17:43:08 2005 +0000
+
+    Reference the ezmlm sources within the repository.
+
+commit 4ccfc7144eace70f9269553d4ba80747c5479c68
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 17:42:37 2005 +0000
+
+    Add the original ezmlm sources into the repository, used by various
+    tools to generate the patch and file lists.
+
+commit f51e020e54c9961241cc538e15cbaa43a90a21ff
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 17:41:23 2005 +0000
+
+    Fix a small problem with ezmlm-test.do that causes a directory to get
+    put into the SOURCES, which in turn confuses the makedist script.
+
+commit 9c1c962538ece2875924ce23200d77cda491daaa
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 06:03:23 2005 +0000
+
+    Moved issub.h into the same position that it was originally.
+    This all goes back to a mistaken change in r159.
+
+commit 3da6f2f7eaf208a5f3fb5d050d38ddab6643f6a4
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 15 05:24:52 2005 +0000
+
+    Added source file "issub.h" that actually is present in the original
+    ezmlm-0.53.tar.gz package.
+
+commit 1fbef00725cd8c2a661dac263cde002e3d85d2f9
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Apr 14 22:16:13 2005 +0000
+
+    Added a target to build ezmlm-test.
+
+commit 4b00b5e44c7ba345e830958d7ed633f19ce9a03a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Apr 10 03:43:26 2005 +0000
+
+    Revised the logic a bit, to treat files as sources only if a rule for
+    them doesn't exist, instead of assuming that files that already exist
+    are sources.
+
+commit 09509935ea946d7e26389746778562ae7a1910ca
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Apr 10 03:42:21 2005 +0000
+
+    Be more specific on what kinds of files the ezmlmrc.* pattern matches.
+
+commit 0e20ac61dc3b38e6b03225078cdc3f7005cc3eb5
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Apr 10 03:20:17 2005 +0000
+
+    Added missing =s files for shell scripts that weren't being built.
+
+commit 19e82ee7e26f4393534e03775fda77f85d304185
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Apr 10 02:59:24 2005 +0000
+
+    Added missing stralloc_num.o object to the stralloc.a library.
+
+commit 2c5cf67a19ff0692f4a3ee340a8d0e47e2d8448d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Apr 10 02:58:48 2005 +0000
+
+    Added some missing targets.
+
+commit c76ad2694229dd6dc2741177e7713888816d211b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Apr 10 02:57:39 2005 +0000
+
+    Auto-generate TARGETS and SOURCES from makemake.sh
+
+commit b90c2e43ac5ea252774bff7d5965b7ebc4f978e6
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Apr 7 19:24:09 2005 +0000
+
+    Removed unused "fdlock" variable.
+
+commit 4518696f3cde40dfe0e3d8c447fa7d335216fc77
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Apr 7 19:23:29 2005 +0000
+
+    Removed unused "die_badaddr(void)" function.
+
+commit 6f642305383a4e7319bce3ce24ff655280f223cf
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Apr 7 16:53:44 2005 +0000
+
+    Removed unused reference to $LOCAL.
+
+commit 045aae817a14cdf2327f94aa1614c5c470f695ce
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Apr 7 16:53:11 2005 +0000
+
+    Removed more (all remaining?) uses of inlocal/inhost, and fixed up
+    documentation to match.
+
+commit 32b6ddb11c71ea79e96b7386d9b2a93da1f33343
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Apr 1 23:17:55 2005 +0000
+
+    Fixed some obvious formatting typos in the ezmlm-limit.1 man page.
+
+commit 48899bb738fadf03fff60e8cadbbf17e2f5217c4
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Mar 29 05:36:14 2005 +0000
+
+    Removed redundant flag selectors.
+
+commit 1d32883dcbc2dfc202e61c24877a6aefb025b291
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Mar 16 22:31:05 2005 +0000
+
+    Unified the "digest" text file flags across all languages.
+
+commit 44551b612fbab18c9f531bdbca86e080900cf3cd
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Mar 16 21:52:58 2005 +0000
+
+    Unified all languages to have the same #E flag on most text files.
+    Some other unifications remain.
+
+commit e8681f543b2748e656feb678035290433708af2d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Mar 16 21:41:00 2005 +0000
+
+    Unify the flags on edit-* text files across all languages.
+
+commit afa190cc14fb29a9e9d26df5784c5d58fce8baef
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Mar 9 04:48:47 2005 +0000
+
+    Merged revisions 234:245.
+
+commit 4edd0b065f76322bd259463155b04a21ae419790
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Feb 9 21:40:33 2005 +0000
+
+    Added another missing source from the previous merge.
+
+commit 35de41969907282f14494b4025606144eb43a109
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Feb 9 21:38:05 2005 +0000
+
+    Removed the FATAL argument from the wrap_* functions.
+
+commit 3456d0d478eeed1702d5449aa16acb6b31bcf1a3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Feb 9 21:28:36 2005 +0000
+
+    Changed to use subfdin and subfdout in a number of places.
+
+commit 13813c61cad5c9b3cf9fabd998fe82292774d466
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Feb 9 21:27:59 2005 +0000
+
+    Tweaked error messages to be a little clearer.
+
+commit 36f4eefb84d5e3fc11d117d08fc3ebcffe7ee039
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Feb 9 16:26:09 2005 +0000
+
+    I missed adding this to the previous merge of branches/0.43 r198:234
+
+commit 80a4cae53daab8b655d97a0eb7e5b368f2d44e74
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Feb 9 16:24:15 2005 +0000
+
+    Merged branches/0.43 r198:234
+
+commit 879a4b86343a0f59805410a73551b7ed446fbfec
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 19 05:22:07 2005 +0000
+
+    Added subfdin and subfdout buffers in addition to the existing subfderr.
+
+commit 4ca7990aeaeb96205a6d3db29e93700430318d8c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 19 04:28:07 2005 +0000
+
+    Made the subfderr pointer (not the contents) const.
+
+commit 7f532d434c1729986048ecbce5035337d753e63b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 19 04:21:43 2005 +0000
+
+    Merged the subscribe and unsubscribe code, and reconciled the manual
+    pages.
+
+commit ee6167c1c7df10bcc4813a949e82a176066bdce5
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 12 21:39:26 2005 +0000
+
+    Removed the "psql" declaration from subscribe.h, moving and renaming it
+    (making it unique) into each of the sub databases.
+
+commit 41b9ad9907a0420dfc595095365e16e7aa6fc082
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 12 21:38:47 2005 +0000
+
+    Fixed up done items.
+
+commit 7bd0c87d28ed6ee559a0533b20c39f11ee08729a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 12 21:26:23 2005 +0000
+
+    Moved the "psql" global out of the program main files, where it was
+    repeatedly defined, and into the sub_*sql subdirectories.
+
+commit 952d1d65b71410729cac454701959c87969cbba3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 12 19:29:15 2005 +0000
+
+    Gave the rest of the sub_* functions proper prototypes.
+
+commit 120e250a3793e4e5839fb6c4c1e82925d782fd73
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 11 21:20:15 2005 +0000
+
+    Removed the "fatal" parameter to many functions in favor of the FATAL global.
+
+commit 7732f5d2305779de7d0244188f35e2cb8ebaa311
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 11 20:06:27 2005 +0000
+
+    Fixed some leftover die_nomem(fatal) issues.
+
+commit f12293f121ac803428a662db8bd4aada10c7fbd4
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 11 19:01:45 2005 +0000
+
+    Make FATAL a const char[] instead of a #define, making it accessable globally.
+
+commit 053b4eaddb15d226648d400481a8bf51a5dd8c10
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 11 18:37:47 2005 +0000
+
+    Dropped all the extraneous die_nomem definitions.
+
+commit 5874bda6ca99da1830c3115012d30e66e4bd3955
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 11 18:35:36 2005 +0000
+
+    Added missing targets to make sub_mysql and sub_pgsql work.
+
+commit 8f1efa82060d0ecbb8da41050ffa7a26e95ab32f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 11 18:11:59 2005 +0000
+
+    Fix ordering of symlink and dependon.
+
+commit 33d199e09265cd3aa9785c4f0a6fc517f67e7f42
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 10 17:31:35 2005 +0000
+
+    Merged branches/0.43 r189:198
+
+commit aa0300007757ea07209b37d950352d57984d6e8e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jan 7 15:37:06 2005 +0000
+
+    Started trying to fix ezmlm-receipt, but some problems remain.  Most
+    notable is the unresolvable "subreceipt" function.
+
+commit 6461cf24f9eedd259d07118ce257636a742f034a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jan 7 05:03:43 2005 +0000
+
+    Merged slurp.o and slurpclose.o into slurp.a
+
+commit 99ced7ddb3cbf0fcbd2ed9160716ce350188eb40
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jan 7 04:57:57 2005 +0000
+
+    Switched from a hand-coded Makefile to automatically built with makemake.sh
+
+commit 593ad7eebcef13ff984d3039da6b0f0de5885d97
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jan 6 18:20:50 2005 +0000
+
+    Added a new program, ezmlm-dispatch, to be run from a global
+    .qmail-default file
+
+commit 3428ee964305206656070964f92f12cd14931839
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 5 04:46:48 2005 +0000
+
+    Fixed up typo: "unalble" => "unable"
+
+commit 0daccd56768aee7d4e7d80f6e0e6edb277100eba
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 5 04:38:36 2005 +0000
+
+    Added missing target for wrap_stat.o
+
+commit c581a27db50f37ea6530be65b8a4850b68c5bbd8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 5 04:35:11 2005 +0000
+
+    Added a wrap_stat function.
+
+commit 3dc976a192ec4554ff98c14281cd363bc611cdb7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 19:50:05 2005 +0000
+
+    Added prototype for _exit
+
+commit 831c5147661eab62785ada968847b974e5c6f446
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 19:49:36 2005 +0000
+
+    Removed many instances of the now obsolete C "register" keyword.
+
+commit 2febda9a2c15d2ba9afe167a9376ead7d67539db
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 19:44:13 2005 +0000
+
+    Removed two unused variables.
+
+commit f9177ef4c5375b3e395d4a78c64a9aee8c80be80
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 19:33:17 2005 +0000
+
+    Added the two auto_* headers and the conf-* files to the list of
+    "replaced" files.
+
+commit a5bf9260339a1282ef4ae6b68f3cdc34c3d81d8a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 19:20:37 2005 +0000
+
+    Removed some "old qmail" instructions in ezmlm-test.1 that are no longer
+    relevant.
+
+commit 8b3b4137a4f42b231791cad21d3ecb452a4ee9ee
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 19:18:37 2005 +0000
+
+    Removed support for qmail older than version 1.02.
+
+commit ce9f2980b83f3c16404c08418b79d4c156d303dc
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 17:45:47 2005 +0000
+
+    The day number on the date header may have 1 or 2 digits.
+
+commit 803c721b03d71f111fb3b21d2484bbbfd327cda0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 17:43:12 2005 +0000
+
+    Need to escape the '$d' part of the string in double quotes.
+
+commit 01657ffe52dc76bfb58b25b452d827c74ebdbccf
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 16:46:18 2005 +0000
+
+    Fixed some more email addresses.
+
+commit ae536ecae9f0ed804df6eb3643776b35f273aff3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 16:45:40 2005 +0000
+
+    Add the "symlinks" dependancy to the default "it" rule.  Thanks Paul Jarc.
+
+commit 036d5df47e1d9da47ee96b244bab2cbac0a8c464
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 16:14:00 2005 +0000
+
+    Removed extraneous $Name$ tag (unsupported by svn).
+
+commit aeccaac36905553ed7665be85fac54717b9c76ab
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 16:08:10 2005 +0000
+
+    Added $Id$ tags to man pages.
+
+commit d1ea64dfe8ebc8344959c57a2ffc372602a0d11d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 05:17:38 2005 +0000
+
+    Added an explicit struct stralloc declaration to prevent some build errors.
+
+commit fb62ca12fc1a81b418d8a1dd2d0941513498a154
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 05:12:17 2005 +0000
+
+    Added prototype for wait_pid, removed unused declarations.
+
+commit 0b8d528f0e98e4b964e3e6f6a9979840660f2f89
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 05:10:18 2005 +0000
+
+    Added prototypes for surfpcs_* functions.
+
+commit bf154edb61b2abe2b9e53cad58517516fe24499f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 05:07:58 2005 +0000
+
+    Added prototype for surf().
+
+commit 6f2b0ac42bcdf7f5852f773e128db1b9ab6cc4d3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 05:06:33 2005 +0000
+
+    Added prototypes for substdio functions.
+
+commit 41ceb364f97ceea8f2a49a3e9258f6201a11cc6c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:57:22 2005 +0000
+
+    Removed unused declarations.
+
+commit 66ca0c9629382512e7ebcd6079b159f095505771
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:55:17 2005 +0000
+
+    Added prototypes for slurp and slurpclose.
+
+commit a4715fd03f3803b55407d8a0219130eb1c542c7a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:53:38 2005 +0000
+
+    Added prototypes for sig_* functions, removed unused declarations.
+
+commit 07fcd9debb3c9e8e861fbe059c066c5b29392bc7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:49:34 2005 +0000
+
+    Added prototype for now().
+
+commit 646df06b1d7235a8a08e1b7cdcbca349c21485d4
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:49:17 2005 +0000
+
+    Added prototypes for quote* functions.
+
+commit 188ffa4d767ce83da1c0a2a40b0e7d3f43149ea3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:43:53 2005 +0000
+
+    Removed unused file issub.h
+
+commit 2e0f8b090d0163152696cbcdec02bdbe169704fc
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:43:25 2005 +0000
+
+    Removed completely unnecessary "shar" target.
+
+commit ceebdff8102660b539b7f1dd96466a30c5d9f7e4
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:41:08 2005 +0000
+
+    Added prototypes for the idx_* functions.
+
+commit 11346de0297b5275f7523f19c00e3fdb351eae00
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:40:55 2005 +0000
+
+    Added prototypes for the getln functions.
+
+commit ab409cb1925f9fb26815904ac6885df856d5732b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:28:45 2005 +0000
+
+    Added getconf prototype and fixed two resulting bugs.
+
+commit cd47d7a985b0ece84a6b3c35893d30089482d6bf
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:17:00 2005 +0000
+
+    Added prototypes for env_* functions.
+
+commit 8504b26ec6278f598c5421bad8263d3a3a34164c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:10:27 2005 +0000
+
+    Added prototypes for datetime_tai.
+
+commit 505c1c59593835105ec8d6940bdc089b2856ac79
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:08:43 2005 +0000
+
+    Added prototypes and consts to constmap.
+
+commit f808ac85f8af78e3748f5f429c606420dab7e010
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 04:01:11 2005 +0000
+
+    Gave the byte_* functions proper prototypes.
+
+commit ea6a8660813e21e59e5f03e11827e41e2d6bcc3d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 03:56:11 2005 +0000
+
+    Fixed up alloc.h and all problems steming from broken usage.
+
+commit 99752f6d77c694add37b1bc4e8b61d734d7196a3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 03:20:14 2005 +0000
+
+    Marked several more sources as "replaced" since the originals are
+    effectively no longer present in the new files.
+
+commit b16da0a5a90873578cd2ddfbdf979b789d0a8996
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jan 4 03:12:13 2005 +0000
+
+    More compile fixes resulting out of adding -Wchar-subscripts to conf-cc
+
+commit 0cfe90386735d2a782d2e55d58758a387b61269b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 3 22:53:05 2005 +0000
+
+    Fixed more warnings (and a few errors) related to writeable strings.
+
+commit d284112786ecd8db4ab8554e730c89f74b52e259
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 3 19:51:47 2005 +0000
+
+    Fixed the previously-fixed warnings in the mysql/pgsql sources as well.
+
+commit 29bba134caefa51bbf5db46e52fb84424262ed4f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 3 19:34:32 2005 +0000
+
+    Fixed more warnings, mostly implicit declaration of functions.
+
+commit 76565317d65ff7e0036d9cbd18bf2feb1272e32c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 3 19:27:13 2005 +0000
+
+    Added missing auto_version.c target.
+
+commit 9a106a2f740a87b34c10803659f759004228809c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 3 17:07:14 2005 +0000
+
+    Cleaned up warnings about puts clashing with built-in function.
+
+commit ad666eeb04f975d4ec028da77f4af7fb4bdc7088
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 3 16:57:59 2005 +0000
+
+    The last change deleted the wrong variable in ezmlm-cgi.c
+
+commit 659acb0d7f594c2595e02f0cf40bc2467024aa18
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 3 16:54:59 2005 +0000
+
+    Removed a pile of unused variables.
+
+commit a3787fd07069037eb2ac8c65bc7dc38ba564c180
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 3 16:49:27 2005 +0000
+
+    Use a simpler sed expression for extracting the header of a message.
+
+commit c876eaaa0fc1817c184e1beb3480c055119b25ee
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jan 3 16:11:10 2005 +0000
+
+    Removed all references to "inhost" which was completely unused but
+    still referenced in documentation and tests.
+
+commit d6bb9d60311543436811b49c874c88f6d59eae0e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Jan 2 04:04:00 2005 +0000
+
+    Final date stamp on version 0.432
+
+commit b55dec51ad87031ebed5db7024ec7f54e31bee74
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Jan 2 04:01:36 2005 +0000
+
+    Un-fixed the Swedish and Danish translation names, as they should match
+    ISO 639 language codes, not ISO 3166 country codes.
+
+commit 8b05c7e151dafd17071c9cac6cfe9b23feb8176e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 29 20:36:15 2004 +0000
+
+    Added missing targets.
+
+commit 0f81fb74433bea74654c8eb040ff011a6490c3f4
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 29 20:33:17 2004 +0000
+
+    Final date stamp on version 0.431.
+
+commit 674f9daffdf1e8726f0a426088e8955716746620
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Dec 26 04:56:37 2004 +0000
+
+    Added simple header tests for ezmlm-send.
+
+commit 2fe8ec1faf36f8053e91566328609bf492939484
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Dec 24 22:11:57 2004 +0000
+
+    Started adding some significant header verification tests.
+
+commit 8f773480eef91fbd086cfb02d989acc445e242cd
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Dec 24 00:09:09 2004 +0000
+
+    Added note about header reorganization, and fixed another "da" reference.
+
+commit 3795f07634d5ecd6cb320064241bb18f85ba8df6
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Dec 24 00:06:09 2004 +0000
+
+    More header reorganization: replaced the content type names with an enum.
+
+commit bdb1a9487afc1cdd72daf4de06c582681f84707d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 23 23:39:01 2004 +0000
+
+    More header reorganization: boundary output and misc cleanups.
+
+commit 1710cd0c50ff74f221f2e696e45e9d8624be5ab7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 23 23:16:38 2004 +0000
+
+    Some correctness fixes: only output charset on text/* parts.
+
+commit 8a090390c6df22bacc6fe159ca4d76d17c0a5d83
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 23 23:13:38 2004 +0000
+
+    Use str_diffn instead of memcmp.
+
+commit 63e3802fc21da4006a65d07477d3e665369a36ad
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 23 21:24:04 2004 +0000
+
+    More header reorganization: some simple functions for adding generic
+    header lines.
+
+commit 73b651afda559aed0b4e83fb86c11a3703f559b3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 23 04:01:54 2004 +0000
+
+    No longer need to correct sv (now se) translation.
+
+commit 10e7d9bf5dbb0db1d59d10b98b08303f42ebb665
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 23 04:01:33 2004 +0000
+
+    More header reorganization: common routine to output the From: header.
+
+commit 58ad48da201a42bbe3d297dfc09a3e3108a6cbf3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 23 03:33:42 2004 +0000
+
+    More header reorganization: set up the convention that the hdr_*
+    functions assume the last character was a newline, and end with a
+    newline themselves.
+
+commit 48f02d27e867e396b76c2c9f981d5bc44192d278
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 22:26:26 2004 +0000
+
+    Fix typo on properties -- "Id" should be just "Id"
+
+commit 47cb33a887f35be6d2ac9108ef00aae143049ffa
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 22:23:22 2004 +0000
+
+    More header reorganization: group the common MIME headers.
+
+commit fd0b93ea69bcac1ad5f92a9ec798f9119a86d80f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 22:08:29 2004 +0000
+
+    Build a test qmail-queue substitute to allow for instant analysis of
+    program output.
+
+commit 1e6c6d65a38c110f9c6ecb30ade3ce68d55315d8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 20:50:53 2004 +0000
+
+    Make ezmlm-idx obey $QMAILQUEUE.
+
+commit 782429ac8f0dcd5754ded7dc2f7579223fba292c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 04:59:00 2004 +0000
+
+    Added $Id$ tags to all the tests.
+
+commit 6b73697489c8ca5894610c541cfd17e9a0523ec2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 04:39:38 2004 +0000
+
+    Removed several unused Makefile entries.
+
+commit 5602dcca07613f98278130be41268d32ab5a853d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 04:30:13 2004 +0000
+
+    Relaxed the "const"s on the sgetoptmine prototype to eliminate several
+    spurrious compiler warnings.  It's ugly, but the dozen or so casts to
+    shut gcc up is even uglier (and mostly unnecessary).
+
+commit a7d5547aa87e5e6b0136c33abecf43c62f2630f5
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 04:16:56 2004 +0000
+
+    Make proper prototypes for the makehash functions.
+
+commit 1ac052acb6022497831545cd41566c2e029cfff3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 04:16:08 2004 +0000
+
+    Add missing makehash.o object file for building ezmlm-store.
+
+commit 7c0f171ca2e1d1367296eaa0e5530ba39dbc72d9
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 04:10:45 2004 +0000
+
+    Rename this internal "makehash" function to "makeacthash" to prevent it
+    from colliding with external "makehash" function.
+
+commit 2df979f7e48d18ff58491e126717ee7305d84efd
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 03:53:19 2004 +0000
+
+    More ezmlm-test reorganization: split apart sections 3 and 4.
+
+commit 0bf489c586eef6cdbddf51d7fd2420b1516d0031
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 22 00:15:34 2004 +0000
+
+    More ezmlm-test reorganizations: split section 2 into smaller parts.
+
+commit a8c0d213ce160ae273b13b2650948ecaa25138f6
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Dec 21 23:37:31 2004 +0000
+
+    More test reorganization: finish the split of the 1* series.
+
+commit 56c9749e0b8b293aaba4833c7e00ebfb41a1e8b3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Dec 21 23:29:55 2004 +0000
+
+    Renumbered the 1* series of tests to allow for more numbers.
+
+commit 99b8ff36b5f1268b83c906320d89579b008ba753
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Dec 21 23:27:35 2004 +0000
+
+    More test reorganization -- splitting up 12-ezmlm-reject
+
+commit 9fa5d650b753314befd87de94d67634a608ffa15
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Dec 21 16:01:35 2004 +0000
+
+    Internal reorganization of ezmlm-test:
+    Start breaking the original 2410 line shell script into smaller files.
+
+commit fa530c95d94453517bbcc18a74ccecb293e38cc0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Dec 19 05:41:38 2004 +0000
+
+    Fixed some remaining country code conversions.
+
+commit f87786f99c7696f862811cf4d569379cd839a217
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Dec 19 05:40:02 2004 +0000
+
+    Fixed naming of translations to match their ISO 3166 country codes:
+    sv => se (Sweden) and da => dk (Denmark)
+
+commit a528205270e3ec1763406bdc9ea6842b7386f094
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Dec 19 05:36:13 2004 +0000
+
+    Fixed up the broken Swedish translation.
+    Thanks "Mads E. Eilertsen" <mads.e.eilertsen@hist.no>
+
+commit ea0933e7f8553e4a5cc6377ffc0181b4063a44b7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Dec 17 18:08:33 2004 +0000
+
+    Header reorganization: common Date: Message-ID: routine.
+
+commit 3745506b5a2cfde8dedea9ebe10a16a59a0959a8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Dec 17 05:32:49 2004 +0000
+
+    Header merging: boundary+content-type followed by hdr_transferenc.
+
+commit a9a6327d852146c22c61300bddd9036bd556f178
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Dec 17 05:16:43 2004 +0000
+
+    Added missing Id property.
+
+commit 95df591504b6ba9e41f5d39f5b2476c6e89345cc
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Dec 17 05:13:54 2004 +0000
+
+    Start of header transformations:
+    merge all identical "transferenc" functions into one site.
+
+commit ea4776e12a62549d1143498208701a74a7e4286d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 2 04:30:06 2004 +0000
+
+    Auto-generate all version strings from the VERSION file.
+
+commit 379366b2b1e6b5fb688491d3d0ec4c67a946a06b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 2 04:22:51 2004 +0000
+
+    Use "const" in declaration of these strings.
+
+commit 0dee83eb10f08375bd8d495b40b34b53995cbc07
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 1 18:56:17 2004 +0000
+
+    Bumped version to 0.431
+
+commit 8beb1bea08aa567f3b12378977e2633a192671ac
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 1 18:50:33 2004 +0000
+
+    Added missing note about version 0.43.
+
+commit 31f59891e79b69bf9d441dc7bc9bfe00f335369a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 1 02:17:46 2004 +0000
+
+    Added missing ezmlm-confirm.0 target.
+
+commit 74048e15eab78ba8149b06b472a00803c0fcd9ad
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 25 17:45:32 2004 +0000
+
+    Stamped the release with version 0.43, today.
+
+commit 56676b7e1dca243b9a85bfecd8c67aa9037aef6b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 25 17:44:12 2004 +0000
+
+    Added "symlinks" target to easily recreate all the symlinks.
+
+commit b1d9f03a2b8db6633b298b3eec7005549a2825f3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 25 17:10:00 2004 +0000
+
+    Updated email and web addresses.
+
+commit 72beafcc980041e1a9bf198d9bc96d22d7422c8c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 25 17:08:46 2004 +0000
+
+    Added note about refactoring header generation.
+
+commit f8bbd47547224acc7d2b74a9bd45cb4427088c10
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 25 16:40:05 2004 +0000
+
+    Added per-post sender confirmation patch from Tullio Andreatta.
+
+commit 72330cac73a720628e87b62206ae450500262fa6
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Oct 12 16:55:57 2004 +0000
+
+    Substitute <#r#> in (un)subscribe confirm messages with just the local
+    part of the reply address (for web-based confirmation).
+
+commit aa19dc42b891cb290455a0b8ac6ff5a99f095862
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Oct 8 23:34:32 2004 +0000
+
+    Converted to ANSI C prototypes with const parameters.
+
+commit 00727d41ab6a504a62066abbfa5834705e24e5c6
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Oct 8 20:29:39 2004 +0000
+
+    Always reject bounce messages in ezmlm-reject.
+
+commit 5ae75046b67d20a6864d13c8f5ecdb7d16be378a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Sep 17 18:40:23 2004 +0000
+
+    Changed all example domain names in text files to the RFC 2606 mandated
+    example.com domain name.
+
+commit ef28df7da918f09deef4a7e458a9f1d6962f46e7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jun 15 05:50:58 2004 +0000
+
+    Add the new wrap* sources and targets to the appropriate lists.
+
+commit fd1832656bcf727782ca769ece61815b783e534d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jun 14 22:19:10 2004 +0000
+
+    Got rid of the frivolous uses of /bin/sh to exec ezmlm-send.
+
+commit c8650703efa9a1cb03dbb0d7b77f346b471c3972
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jun 14 20:34:10 2004 +0000
+
+    Another wrapper, this one around execv /bin/sh -c command.
+
+commit 3637589a48fffac5cfdedad1462ecb3f82cb1c81
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jun 14 19:30:35 2004 +0000
+
+    Add a wrapper for fork(2).
+
+commit b49e698c2c7ea2560eda6e1319c7f426783299db
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jun 14 19:21:30 2004 +0000
+
+    Created a new "wrap" library, used for merging common code trapping
+    error exits from system calls.
+
+commit 50fcb72234d272acf572551cc93a33fd0fb021b1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 11 18:31:35 2004 +0000
+
+    Corrected the default subscriber mechanism to be "std".
+
+commit 948ecc05378d4130da14cb9e38c9ee484f27b742
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 11 18:30:40 2004 +0000
+
+    -Added conf-sub control file, used to choose which subscriber mechanism
+    to use.  This replaces the "make std/mysql/pgsql" mechanism.  Adapted
+    from patch by Tullio Andreatta.
+
+commit 357e5d02aa9c2ec1a59798d37bccc4586b133b86
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 11 18:14:23 2004 +0000
+
+    Fixed several type issues in the mysql/pgsql subscribe setups, which
+    resulted in several cascading const improvements.
+
+commit 12399eeaaeb07807f65a48e7207a5bc91827b85d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 11 17:24:17 2004 +0000
+
+    Const and prototype fixes for yyyymm.h and related sources.
+
+commit b68c4b0a90381dadb0a38f3138be9b2509125979
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 11 17:20:40 2004 +0000
+
+    Fixed up qmail prototypes and added const in appropriate places.
+
+commit 3f551b5c1288460acb6fce4d7f25886d764ef708
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 11 17:04:33 2004 +0000
+
+    WITH_PROTO is not set by any build test, and is effectively true for all
+    even remotely modern compilers, so assume it to be true.
+
+commit 6a59cc6607f7657c756567ed76c244ab58e5988d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 11 16:32:43 2004 +0000
+
+    Fix up $Id$ tags (hopefully).
+
+commit dc7fd15e3ba14c4199628a883cc7a7303349d460
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 11 04:27:55 2004 +0000
+
+    Moved generated files into TARGETS like they should be, added several
+    source files missing from FILES.idx, and used proper paths for the
+    sub_*/* sources.
+
+commit c9237a10bfab679d7f5c63c790d60c4b1a9263f0
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 11 04:24:10 2004 +0000
+
+    Added all generated man pages, and install/install.o to the TARGETS list.
+
+commit eeb59fea4220aa151a61a2ac1dfde2fe39d12b32
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 11 04:04:07 2004 +0000
+
+    Several documentation and comment fixes from Tullio Andreatta.
+
+commit 6912a91282c907928efc1cdd6a565006b48d1980
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jun 8 22:39:06 2004 +0000
+
+    Added version history file.
+
+commit a384d340c459fcde6ae9879cba6f3395ed5d81f8
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Jun 8 17:10:29 2004 +0000
+
+    Clarified the Italian unsubscription note, from Tullio Andreatta.
+
+commit 11e2e6df4b30a639ad66b616c5702d46d8e199a4
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Jun 7 22:46:51 2004 +0000
+
+    Add backslashes to command-line options, for consistency.
+
+commit 8b85e78d01c1cba0c6a5cb7dffac8b9a7d8a57cc
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 4 19:47:38 2004 +0000
+
+    Arrange for all of the ezmlmrc language files to be built.
+
+commit 1fe472d195e3e4bed81e31f1659537372768a48d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 4 19:44:35 2004 +0000
+
+    Fixed apparent typo: [ and ] don't need to be escaped.
+
+commit 1635c8a2b6814b6cbfd54e3c2580f0185940dc16
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Fri Jun 4 06:10:05 2004 +0000
+
+    Fixed up documentation still referring to /etc/ezmlmrc to point at
+    /etc/ezmlm/ezmlmrc.
+
+commit 2d26053be5a6199074ba72db6fcde245f9740a7f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 3 05:17:12 2004 +0000
+
+    Set version number to 0.421
+
+commit bfbab609b40458334d6a9bb6e05602b480e1c336
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 3 05:06:04 2004 +0000
+
+    Fixed one remaining instance of "head -#"
+
+commit 578270db86818b4682e47732c37e706677cc005b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 3 05:04:43 2004 +0000
+
+    Fixed $Id$ tag.
+
+commit 6a3584fd73249403578a1d8e5c0b5eeebf6cc66c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jun 3 04:59:10 2004 +0000
+
+    Fixed uses of "head -#" and "tail -#" to "head -n #" and "tail -n #".
+
+commit 9a8991f8c04d92a3a12ea69ee4849b3933f73d47
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed May 5 20:46:20 2004 +0000
+
+    Fixed typo bug in ezmlm-cron.
+
+commit 3bde50106fa5ee2cc63d07eaa64586b65a20c6be
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed May 5 20:43:11 2004 +0000
+
+    Resolved some const char* assignment issues.
+
+commit 212b705575cc1359234a752408bd7c61d392a0c9
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed May 5 18:47:55 2004 +0000
+
+    Fixed problem with "test -e" in makelang.sh for Solaris.
+
+commit c285d759d8b27572a031305d63c9b248104021b7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed May 5 18:45:30 2004 +0000
+
+    Fixed "log" function conflicting with built-in math function.
+
+commit f6fc11dfca95814ec68483409ca24923200eec9e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed May 5 18:25:28 2004 +0000
+
+    Imported the const prototype definitions from the public domain sgetopt code.
+
+commit 3dc495f263dbb062e25c9d76fab2b6c7aaaf7957
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed May 5 17:38:40 2004 +0000
+
+    Replaced wait_pid with public domain source, pulling in choose.sh.
+
+commit cbe704741cf35f622e19e8339bbe4f675886ce69
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed May 5 17:01:22 2004 +0000
+
+    Replaced many library with public-domain sources.
+
+commit b034bf90b27198a09920ccb2bf655aa5667f1837
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Mon Apr 19 16:53:20 2004 +0000
+
+    Add this list of sources that are replaced wholesale (instead of being
+    patched) in the ezmlm-idx tarball.
+
+commit 4816cd5c50b3a83c2231b6af09e47244dda44760
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Apr 18 05:37:30 2004 +0000
+
+    Fixed bug in ezmlm-request when dealing with continuation lines.
+    Thanks Sami Farin.
+
+commit abf05f007b2e7febff24bf9688a159b46e1754a2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Apr 18 05:29:29 2004 +0000
+
+    Make sure the makelang script is executable on building, and remove it
+    when cleaning built objects.  Thanks Michael J. Forster.
+
+commit 9a595b7dd8198793846ba0fc1bb73e9de5219196
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Sun Apr 18 05:24:58 2004 +0000
+
+    Updated ezmlmrc.fr.  Thanks Jean-Marc Lasgouttes.
+
+commit dea30703058326cc60ea026c02e4492f77521996
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jan 15 17:12:23 2004 +0000
+
+    Message-ID: <20000109163828.632.qmail@id.wustl.edu>
+    From: "Fred Lindberg" <lindberg@id.wustl.edu>
+    To: "ezmlm@list.cr.yp.to" <ezmlm@list.cr.yp.to>
+    Date: Sun, 09 Jan 2000 10:36:39 -0600
+    Subject: Re: Subscriber-only, moderated lists don't get ezmlm-archived?
+    
+    Just insert
+    
+    |/.../ezmlm-archive DIR || exit 0
+    
+    into DIR/editor after ezmlm-send (in addition to the DIR/moderator
+    invocation where it already should be for ium lists).
+    
+    Or edit ezmlmrc (see below), then ezmlm-make -+ DIR
+    
+    That special case isn't covered for ezmlm-archive, which of course it
+    should be. For moderated messages it works, but ezmlm-archive is not
+    invoked by messages from subscribers (so they won't be entered into the
+    index until the next moderated message comes in).
+
+commit 5dd73f9fbba837a21c2f46124d13c5e48441cde7
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Jan 15 16:51:11 2004 +0000
+
+    The version number in the ezmlmrc file needs to match the version in
+    ezmlm-make.
+
+commit 0cd4a208ac981c9c94e5097bc215de6329ca916c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 14 22:49:54 2004 +0000
+
+    Updated the list of changes and email addresses.
+
+commit dcf4b95d25fbe97c2850e4c4f1a0d1d0528e01bc
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 14 06:42:08 2004 +0000
+
+    Make makelang a generated file like all the other shell scripts.
+
+commit ed2014b30a5a1657b466bd13706e4bdf6e732d50
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 14 06:34:07 2004 +0000
+
+    Rewrote the ezmlmrc files so they are built from a template plus a set
+    of language-specific portions (the text files plus two bouncesaying
+    replacement strings).  The lang subdirectory contains all the language
+    files.
+
+commit 5344c7508bcd2601f7e1d4f5d9b33e64cc533e41
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 14 05:16:39 2004 +0000
+
+    Added the Id keyword property to all remaining files with a $Id$ tag.
+
+commit e54a1a47de13cbb56cd93cc123902bb1ec83f23e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 14 05:07:24 2004 +0000
+
+    Bumped version up to 0.42
+
+commit c3a8ef9461d482a92f7ad6502bbc7e7838e9caf3
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Jan 14 05:00:25 2004 +0000
+
+    Removed all remaining $Name$ tags.
+
+commit e9e963257d7d1c73328e1762521c99d992b6e59e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 18 20:30:38 2003 +0000
+
+    From: Frederik Lindberg <fred@cheetahmail.com>
+    To: Bruce Guenter <bruceg@em.ca>
+    Date: Thu, 18 Dec 2003 14:30:04 -0500
+    In-Reply-To: <20031218175234.GA13237@em.ca>
+    Subject: Re: ezmlm-idx maintenance
+    
+    Please remove the copyright that is shown in ezmlm-cgi.c and the link
+    that goes with it.
+
+commit 120fd261d3da0db6c78f6c209b770b5b248c6a4f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 18 20:29:18 2003 +0000
+
+    ezmlm-cgi.o was missing direntry.h dependency.
+
+commit 22cdbc586d0c93a8db10ba9734d74be70873219d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 18 19:26:32 2003 +0000
+
+    Removed the $Name$ keywords that svn doesn't support, and marked the
+    $Id$ keyword as needing substitution.
+
+commit c5418fb6cf5d9ec5f90a396b1d21af81aa56d63c
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Dec 18 16:36:49 2003 +0000
+
+    When using ezmlm-cgi on non-standard ports, the port number would
+    precede the hostname.  This patch puts the port number in the proper
+    order, and only adds it if a hostname is also added.
+
+commit e0890d0a168423620b1c370015838793e7193825
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 20:38:46 2003 +0000
+
+    Trivial break formatting cleanup.
+
+commit 2f0cb5c97cd88e660c1567a86862abb9a8e16fff
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 19:43:46 2003 +0000
+
+    Date: Fri, 15 Feb 2002 20:09:12 +0100
+    From: Bernhard Graf <ezmlm@augensalat.de>
+    To: Ezmlm List <ezmlm@list.cr.yp.to>
+    Subject: Bug fix for ezmlm-gate
+    Message-ID: <20020215200912.M19928@lassie.disaster.nil>
+    
+    ezmlm-gate failed on my system.
+    
+    I checked the archive and found someone else has had the same problem:
+    http://marc.theaimsgroup.com/?l=ezmlm&m=96788355216423&w=2
+    
+    For whatever reason ezmlm-gate uses execvp("sh",...).
+    I suppose that in my setup, where qmail is started under svscan, no
+    environment is set and therefore execvp fails (didn't test it, though).
+    
+    I changed it to execv("/bin/sh", ...) - and guess - it works now. ;-)
+    --
+    Bernhard Graf <ezmlm@augensalat.de>
+
+commit 6c20031d0bd9e020e5897cca0add3789322abc28
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 19:35:22 2003 +0000
+
+    Date: Tue, 12 Feb 2002 18:37:13 +0100
+    From: Bernhard Graf <ezmlm@augensalat.de>
+    To: Ezmlm List <ezmlm@list.cr.yp.to>
+    Subject: Re: qmqp relaying - solved
+    Message-ID: <20020212183713.A9794@lassie.disaster.nil>
+    
+    mw-list-ezmlm@csi.hu wrote
+    
+    > What is your patch supposed to fix?
+    
+    Well, it fixes qmqp relaying in idx-0.40 which simply didn't work.
+    The main bug is in qmail.c, function qmail_open()
+    (AFAIR it's this line:   for (i = 0; i + 1 < sa->len; i++) { ).
+    I rearranged the code a little as well.
+    
+    Then I patched ezmlm-send:
+    Changed "getconf_line(&qmqpservers,..." to "getconf(&qmqpservers,..."
+    and removed the undocumented -Q switch, because moderated lists use
+    ezmlm-moderate which calls ezmlm-send imlicetly with no chance to set
+    this (useless) -Q switch.
+    
+    Note that ezmlm-send has been patched with some other patches before
+    (ezmlm-idx.latest.patch, ezmlm-send.patch, ezmlm-idx.func.patch), so
+    the line numbers may differ.
+    
+    All you have to do now is to put the IP number(s) of your relay servers
+    in DIR/qmqpservers/0 (each line one IP). Install qmail+qmqpserver on the
+    remote host(s) and of course tell this qmqpserver to accept mails from
+    the ezmlm server (man tcpserver, man tcprules).
+    
+    The patch is attached.
+    --
+    Bernhard Graf <ezmlm@augensalat.de>
+    
+    
+    Date: Fri, 15 Feb 2002 19:57:44 +0100
+    From: Bernhard Graf <ezmlm@augensalat.de>
+    To: Ezmlm List <ezmlm@list.cr.yp.to>
+    Subject: Bugfixfix (was: qmqp relaying - solved)
+    Message-ID: <20020215195744.L19928@lassie.disaster.nil>
+    
+    Bernhard Graf wrote
+    
+    > Well, it fixes qmqp relaying in idx-0.40 which simply didn't work.
+    
+    Well, well. ezmlm-send worked perfectly with this patch, but as when I
+    put the patched ezmlm on the production server, I saw ezmlm-manage and
+    ezmlm-store crashing. Arrgh!
+    
+    One little check was missing.
+    
+    The fixed patch is attached
+    
+    --
+    Bernhard Graf <ezmlm@augensalat.de>
+
+commit d7a7abc9af321f146647e2d33a9321a0ed5f2976
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 18:53:09 2003 +0000
+
+    Added a diagnostic "-0" flag to ezmlm-gate: instead of running
+    ezmlm-store(1) or ezmlm-send(1), print (to stdout) the command and
+    arguments that would have been run.
+    
+    Date: 16 Jan 2003 10:14:56 -0000
+    Message-ID: <20030116101456.28747.qmail@plover.com>
+    From: mjd@plover.com
+    To: ezmlm@list.cr.yp.to
+    Subject: ezmlm-gate diagnostic patch
+
+commit 48487b9c04210084318bf2736311238356bc3838
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 18:05:29 2003 +0000
+
+    Autodetect if UID=0, to eliminate a common testing error.
+
+commit 8d54984c89a280cca8843c1e490bd2e67c44276d
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 17:48:40 2003 +0000
+
+    Autodetect the current user name, using a variety of methods.
+
+commit dff9155affd004613c1ee2fb36106d10af587602
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 17:29:43 2003 +0000
+
+    Replace the manually configured PS command with an automated test.
+
+commit a9bdbac6f23488fa35cb3ec7177c131445c06824
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 16:49:21 2003 +0000
+
+    Replaced all occurrences of backticks used to suppress output with
+    more-efficient redirects.
+
+commit 2fdfdbb5111337cd2999311f5eaa5e16b46a7e9b
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 06:30:46 2003 +0000
+
+    The first ezmlm-clean test depended on UNIX time being less than
+    999999999s, however the current UNIX time is well over that number.
+    This patch adjusts the artifical "never" time to somewhere in 2033.
+
+commit f81ba931e60f541ed609ea00dd1977b840099fa1
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 06:18:28 2003 +0000
+
+    Yet another typo fix in the echo statements.
+
+commit ab3b35fe815760b0de9925718dadf908880da5f2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 06:14:14 2003 +0000
+
+    More portability and/or completeness fixes to echo commands.
+
+commit 5247f440583193d0de09ddac34bacbfca6020424
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 06:07:52 2003 +0000
+
+    Fixed typo when setting up the prompt subroutine caused by one-too-many
+    substitutions.
+
+commit a384cf08eb998fae87e4094d56f39f5dc487cd38
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Dec 17 06:04:42 2003 +0000
+
+    Portability fix: accomodate systems that use echo ...\c to omit newlines
+    instead of echo -n ...
+
+commit 81cc568b6e766ece90a887df430952d085ce355a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Nov 18 20:57:14 2003 +0000
+
+    Applied patch from Mate Wierdl <mw@thales.memphis.edu> that fixes
+    ezmlm-manage to properly send subscription confirmation to the
+    moderators when the list is set up for moderated subscription
+    (ezmlm-make -s, which creates LIST/modsub).
+
+commit 61e2b0e1ee76d2892d5bbc5329e1edfedf8d4adc
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Nov 18 19:40:40 2003 +0000
+
+    Remove the "-sS" options from the ezmlm-sub.1 man page, as ezmlm-sub
+    doesn't actually support them.
+
+commit df2d42db96e1ccb58460f14e1cf4ab769609bb38
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Nov 18 19:37:59 2003 +0000
+
+    The previous NULL pointer fix applies equally to all sub_*/tagmsg.c
+    sources, so put the fix in the central routine instead.
+
+commit d3477ebaf30dbd67b7baa8bfac24b2ae8e24569f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Nov 18 19:33:16 2003 +0000
+
+    Make sure that seed points to a valid string instead of NULL, since
+    str_len (called via cookie) will crash on NULL pointers.
+
+commit cb4ecfa3097a8020c7a587a909dc23a305e948cb
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Nov 18 19:29:17 2003 +0000
+
+    Need to invoke author_name before calling decodeHDR, as cp may be
+    changed by author_name.
+
+commit 0f9ee74ad6bbf18a101089cd315b5ddcee52ecae
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Nov 18 19:24:17 2003 +0000
+
+    Need to invoke author_name before calling decodeHDR, as cp may be
+    changed by author_name.
+
+commit e9502f62d3d71436fef5789d3682e97264c22b77
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Nov 18 19:21:49 2003 +0000
+
+    Need to invoke author_name before calling decodeHDR, as cp may be
+    changed by author_name.
+
+commit f4559094c8b5ad145464d5f4a1f6dd13fd3249fc
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Nov 18 18:56:48 2003 +0000
+
+    Date: Tue, 5 Jun 2001 15:30:36 -0700 (PDT)
+    From: Ask Bjoern Hansen <ask@valueclick.com>
+    cc: Ezmlm List <ezmlm@list.cr.yp.to>
+    Subject: Re: ezmlm-idx QMQP support does not work
+    In-Reply-To: <20010329202221.E11702@moni.msci.memphis.edu>
+    Message-ID: <Pine.LNX.4.33.0106051229140.7918-100000@impatience.valueclick.com>
+    
+    I've been goofing around trying to get ezmlm-idx to notice my
+    qmqpservers file. Whatever I do it doesn't take effect.
+    
+    I use ezmlm-gate, so I wonder if that's part of the reason. It
+    doesn't parse the -Q parameter, I don't think.
+
+commit 3ace65b91c3694c9991d054577c2bc3cbe80e2ec
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Tue Nov 18 18:07:15 2003 +0000
+
+    Fixed a typo in ezmlm-unsub -- when unsubscribing addresses from
+    standard input the log message would erroneously state "+manual".
+
+commit 10c564b10342d1f8dab78a27cc59f5dd531a909a
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 13 16:53:39 2003 +0000
+
+    Since the "it" make target builds the package, the Italian ezmlmrc
+    translation needs to be identified by "ita".
+
+commit 7ff9144738bc559c3da20029d8a4e1c30b4d5340
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 13 16:50:40 2003 +0000
+
+    Date: Wed, 14 Mar 2001 22:25:36 -0800
+    From: edk@collab.net
+    To: ezmlm@list.cr.yp.to, Fred Lindberg <lindberg@id.wustl.edu>
+    Subject: PATCH : ezmlm-send.c
+    Message-ID: <20010314222536.O27952@collab.net>
+    
+    The attached patch fixes a problem with ezmlm-send in ezmlm-idx (up to
+    0.40 at least): it munges MIME messages which use the default type
+    implicitly in the first MIME part.  (This is not an issue for stock
+    ezmlm, which doesn't attempt to parse MIME parts AFAICT.)  The patch is
+    applied after all the idx stuff is; I think it should be integrated into
+    the -idx patches.  (Copyright is granted, of course.)
+    
+    See http://www.netbeans.org/issues/show_bug.cgi?id=9039 for a
+    description of the bug this fixes.
+    
+    I'll be happy to answer any questions ...
+    
+    thanks --
+    
+    Ed
+
+commit b03e65128f17ba48a2688b247f2d3c593771030e
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Thu Nov 13 00:09:22 2003 +0000
+
+    From: Willem <willem@king-pin.nl>
+    To: ezmlm@list.cr.yp.to
+    Subject: Dutch version of ezmlmrc
+    Date: Mon, 4 Aug 2003 17:18:10 +0200
+    Message-Id: <200308041718.10550.willem@king-pin.nl>
+    
+    Hi,
+    
+    It seemed that the ezmlmrc file was translated to every language but Dutch.
+    Here is a crude version as attachment.
+    Some things don't translate very well from English to Dutch, they get an
+    undertone of disrespect towards the reader. So, if you can improve it, please
+    do and be so kind to send me a copy.
+    
+    Regards,
+    Willem
+    the Netherlands
+
+commit e69361b8ad4963145e16eb503c8ca911a7e095f9
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Nov 12 23:49:07 2003 +0000
+
+    Updated the list of ezmlmrc translations in the INSTALL file.
+
+commit f90e1577824d1ab74f906aa4da1988e561fbf0b2
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Nov 12 23:47:16 2003 +0000
+
+    Added Hungarian translation of ezmlmrc from Julian Severn-nek http://js.hu/
+
+commit d3474b4b9f7d0304a1e5cb425f9b59e9f4d23780
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Nov 12 22:25:05 2003 +0000
+
+    Fix up the definition of errno on modern systems by including <errno.h>
+
+commit 067912cfd3127645e8bd723516935f382e90718f
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Nov 12 22:13:39 2003 +0000
+
+    Applied patch to bring ezmlm-cgi up to version 1.18, which included the
+    changes present in the previously applied nobanner patch.
+
+commit 92d5d4c08d73933accef843c0e5901b06bf801dd
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Nov 12 22:11:00 2003 +0000
+
+    From: "Frederik Lindberg" <fred@cheetahmail.com>
+    To: "BUGTRAQ@SECURITYFOCUS.COM" <BUGTRAQ@SECURITYFOCUS.COM>,
+    	"ezmlm@list.cr.yp.to" <ezmlm@list.cr.yp.to>
+    Cc: "Frederik Lindberg" <fred@cheetahmail.com>,
+    	"vort-fu" <vort@WIRETAPPED.NET>
+    Date: Thu, 07 Dec 2000 14:35:05 -0500
+    In-Reply-To: <20001206140711.9F31A24CA54@lists.securityfocus.com>
+    Subject: ezmlm-cgi/ezmlm-idx-0.40 security advisory
+    
+    Summary:
+    ezmlm-cgi is part of the ezmlm-idx-0.40.tar.gz package and allows web
+    access to mailing list archives. When ezmlm-cgi is installed SUID (user
+    other than root), it can be used to execute arbitrary commands with the
+    effective uid of the SUID user.
+    
+    Scope:
+    Default installations of ezmlm-idx-0.40 are not vulnerable since
+    ezmlm-cgi is not installed SUID by default. SUID root installations are
+    not vulnerable since ezmlm-cgi uses a fixed configuration file location
+    and drops privileges in this execution mode. SUID user (user != root)
+    installations are discussed in the man page, but should be rare. Their
+    vulnerability depends on group and world execute permissions of the
+    ezmlm-cgi binary.
+    
+    Credit:
+    Thanks vortfu (vort@wiretapped.net) for reporting this. I sincerely
+    apologize for my initial somewhat obnoxious follow-up post.
+    
+    ezmlm-idx-0.40 is an add-on to Dan Bernstein's ezmlm-0.53 package. The
+    responsibility for this flaw is entirely mine (Dan would never make a
+    mistake like this).
+    
+    Details:
+    ezmlm-cgi can be installed by a user to allow web access to that user's
+    mailing list archives. It reads a config file from the working
+    directory. The config file can contain a banner program name. This
+    program is executed by ezmlm-cgi. ezmlm-cgi can be installed SUID root.
+    In this case, ezmlm-cgi reads a config file from /etc, chdir/chroot to
+    the list directory, drops root privileges, verifies this, then
+    optionally executes a banner program.
+    
+    When installed SUID user != root, ezmlm-cgi behaves just as for normal
+    installs. A user with execute permissions to the ezmlm-cgi binary can
+    create his own config file directing ezmlm-cgi to execute an arbitrary
+    program with the effective user id of the ezmlm-cgi binary.
+    
+    Fix:
+    A patched version of ezmlm-cgi.c, ezmlm-cgi.1 (man page), as well as
+    the patch (ezmlm-cgi.patch) are available from
+    ftp://ftp.ezmlm.org/pub/patches/ and http://www.ezmlm.org/pub/patches/.
+    This version removes the support for the execution of banner programs.
+    HTML banners are still supported. The (small) patch can also be found
+    below.
+    
+    Alternatively, assure that you have not installed ezmlm-cgi SUID user.
+    
+    Sincerely, Fred Lindberg
+
+commit a28364292dd7bfe2852288ee018340e09b0adcee
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Nov 12 20:50:37 2003 +0000
+
+    First check-in of development sources.
+
+commit 8b0d60b347ab58a5c23b8e6e4d7712543ea5edcc
+Author: Bruce Guenter <bruce@untroubled.org>
+Date:   Wed Nov 12 20:48:13 2003 +0000
+
+    Created trunk subdirectory

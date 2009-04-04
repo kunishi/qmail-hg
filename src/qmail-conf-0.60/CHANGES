@@ -1,0 +1,56 @@
+20000723
+	version: qmail-conf 0.50, alpha.
+20001001
+	internal: eliminated unused make variable from qmail-*-conf.
+	ui: djbdns code is now copied from djbdns-1.02.
+	ui: added qmail-conf. tnx Russell Nelson.
+20001007
+	ui: install now creates the /var/qmail/service directory.
+	version: qmail-conf 0.51, alpha.
+20001017
+	internal: added tcpserver_env() and tcpserver_run().
+	ui: qmail-*-conf use envdir in */run.
+20001029
+	internal: added makelogdir().
+	ui: qmail-*-conf use envdir in */log/run.
+	version: qmail-conf 0.52, alpha.
+20001106
+	internal: added readme().
+	internal: tcpserver_env() now takes three arguments.
+	ui: the -l option for tcpserver is now configurable through
+		env/LOCALNAME. qmail-qmqpd-conf, qmail-qmtpd-conf, and
+		qmail-smtpd-conf copy /var/qmail/control/me to env/LOCALNAME.
+20001113
+	ui: the first argument for qmail-popup is now configurable through
+		env/POPUPHOST. the argument for qmail-pop3d is now configurable
+		through env/MAILDIRNAME.
+20001115
+	ui: the -H/-p options for tcpserver are now configurable through
+		env/REMOTENAME. the -R/-t options for tcpserver are now
+		configurable through env/REMOTEINFO.
+20001120
+	internal: reformatted */run and */log/run so that quotes are reduced.
+20001129
+	version: qmail-conf 0.53, alpha.
+20010113
+	internal: renamed FILES.djbdns as djbdns.files.
+	internal: renamed Makefile.sed as djbdns.mkexc.
+	ui: renamed Makefile.qc as Makefile.ini.
+	ui: djbdns code is now copied from djbdns-1.03.
+	version: qmail-conf 0.54, alpha.
+20010123
+	ui: djbdns code is now copied from djbdns-1.04.
+20010224
+	portability problem: some versions of make, GNU make for example, tries
+		to update Makefile on start-up. impact: couldn't compile if
+		Makefile was created with $(djbdns) set to a non-default value.
+		fix: propagate the specified $(djbdns) value to Makefile.
+		tnx Robin S. Socha and Arjen.
+	ui: djbdns code is now copied form djbdns-1.05.
+	internal: reorganized Makefile rules to avoid unnecessary compilations.
+20010225
+	version: qmail-conf 0.55, alpha.
+20010902
+	ui: replaced qmail-conf with qmail-delivery-conf.
+20010917
+	version: qmail-conf 0.60, alpha.
