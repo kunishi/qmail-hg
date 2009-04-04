@@ -18,9 +18,16 @@ RMRF = rm -rf
 
 QMAILDIR = /var/qmail
 PSEUDO_SHELL = /bin/true
+ADMINPKGDIR = /package/admin
 
 ${WRKDIR}:
 	${MKDIR} ${WRKDIR}
+
+## daemontools
+install-daemontools:
+	${MKDIR} ${ADMINPKGDIR}
+	${CPR} ${SRCDIR}/${DAEMONTOOLS} ${ADMINPKGDIR}
+	(cd ${ADMINPKGDIR}/${DAEMONTOOLS}; package/install)
 
 ## djbdns
 build-djbdns: ${WRKDIR}
