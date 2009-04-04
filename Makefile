@@ -20,6 +20,8 @@ QMAILDIR = /var/qmail
 PSEUDO_SHELL = /bin/true
 ADMINPKGDIR = /package/admin
 
+BUILD_DONE = .build_done
+
 ${WRKDIR}:
 	${MKDIR} ${WRKDIR}
 
@@ -30,13 +32,35 @@ install-daemontools:
 	(cd ${ADMINPKGDIR}/${DAEMONTOOLS}; package/install)
 
 ## djbdns
+configure-djbdns:
+	useradd -g dnscache -d ${DNSCACHEDIR} -s ${PSEUDO_SHELL} dnscache
+	useradd -g dnslog -d ${DNSCACHEDIR} -s ${PSEUDO_SHELL} dnslog
+	useradd -g tinydns -d ${TINYDNSDIR} -s ${PSEUDO_SHELL} tinydns
+	useradd -g axfrdns -d ${AXFRDNSDIR} -s ${PSEUDO_SHELL} axfrdns
+	useradd -g walldns -d ${WALLDNSDIR} -s ${PSEUDO_SHELL} walldns
+
 build-djbdns: ${WRKDIR}
 	@${MAKE} clean-djbdns
 	${CPR} ${SRCDIR}/${DJBDNS} ${WRKDIR}
 	(cd ${WRKDIR}/${DJBDNS}; ${MAKE})
 
-install-djbdns: build-djbdns
+${WRKDIR}/${DJBDNS}/${BUILD_DONE}: build-djbdns
+	touch $@
+
+install-djbdns: ${WRKDIR}/${DJBDNS}/${BUILD_DONE}
+	@${MAKE} pre-install-djbdns
 	(cd ${WRKDIR}/${DJBDNS}; ${MAKE} setup check)
+	@${MAKE} post-install-djbdns
+
+pre-install-djbdns:
+	[ -L /service/dnscache ] && \
+	  svc -d /service/dnscache /service/dnscache/log
+	[ -L /service/tinydns ] && svc -d /service/tinydns /service/tinydns/log
+
+post-install-djbdns:
+	[ -L /service/dnscache ] && \
+	  svc -u /service/dnscache /service/dnscache/log
+	[ -L /service/tinydns ] && svc -u /service/tinydns /service/tinydns/log
 
 clean-djbdns:
 	${RMRF} ${WRKDIR}/${DJBDNS}
@@ -123,6 +147,18 @@ install-qgrey:
 
 clean-qgrey:
 	${RMRF} ${WRKDIR}/${QGREYLIST}
+
+## qtools
+build-qtools: ${WRKDIR}
+	@${MAKE} clean-qtools
+	${CPR} ${SRCDIR}/${QTOOLS} ${WRKDIR}
+	(cd ${WRKDIR}/${QTOOLS}; ${MAKE} prog)
+
+install-qtools:
+	(cd ${WRKDIR}/${QTOOLS}; ${MAKE} setup check)
+
+clean-qtools:
+	${RMRF} ${WRKDIR}/${QTOOLS}
 
 clean:
 	${RMRF} ${WRKDIR}
