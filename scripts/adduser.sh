@@ -5,7 +5,7 @@
 user=$1
 name=$2
 
-useradd -c ${name} -d /home/${user} -m -k /etc/skel ${user}
+/usr/sbin/useradd -c ${name} -d /home/${user} -m -k /etc/skel ${user}
 echo ${user} | passwd --stdin ${user}
 
 echo ${user} >> /var/qmail/users/include
