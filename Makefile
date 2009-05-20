@@ -10,8 +10,10 @@ qmailconf = qmail-conf-0.60
 qtools = qtools-0.56
 ucspitcp = ucspi-tcp-0.88
 
-wrkdir = work
-srcdir = src
+topdir = .
+wrkdir = ${topdir}/work
+srcdir = ${topdir}/src
+docdir = ${topdir}/doc
 
 mkdir = mkdir -p
 cpr = cp -rp
@@ -90,6 +92,8 @@ configure-qmail:
 build-qmail: ${wrkdir}
 	@${MAKE} clean-qmail
 	${cpr} ${srcdir}/${qmail} ${wrkdir}
+	${cpr} ${docdir}/qmail-badremotehost.patch ${srcdir}/${qmail}
+	(cd ${wrkdir}/${qmail}; patch < qmail-badremotehost.patch)
 	(cd ${wrkdir}/${qmail}; ${MAKE})
 
 ${wrkdir}/${qmail}/${build_done}: build-qmail
