@@ -1,7 +1,7 @@
 daemontools = daemontools-0.76
 djbdns = djbdns-1.05
 ezmlm = ezmlm-0.53
-ezmlmidx = ezmlm-idx-5.1.2
+ezmlmidx = ezmlm-idx-7.0.2
 mess822 = mess822-0.58
 qmail = netqmail-1.06
 qgrey = qgrey-0.1-0.3
@@ -153,7 +153,7 @@ build-ezmlm-idx: ${wrkdir}
 	@${MAKE} clean-ezmlm-idx
 	${cpr} ${srcdir}/${ezmlm} ${wrkdir}
 	${cpr} ${srcdir}/${ezmlmidx}/* ${wrkdir}/${ezmlm}
-	(cd ${wrkdir}/${ezmlm}; patch < idx.patch)
+	# (cd ${wrkdir}/${ezmlm}; patch < idx.patch)
 	(cd ${wrkdir}/${ezmlm}; ${MAKE}; ${MAKE} man)
 
 ${wrkdir}/${ezmlm}/${build_done}: build-ezmlm-idx
